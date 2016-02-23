@@ -88,4 +88,10 @@ function sendSesCurrency(friendId) {
 // .then(msg => MessageSuccess(msg).show())
 // .catch(msg => MessageError(msg).show());
 
+EventHandler.listen('friend_added', function (client) {
+    friends.push(client);
+});
 
+EventHandler.listen('friend_removed', function (friendId) {
+    friends = $.grep(friends, client => client.player_id !== friendId);
+});
