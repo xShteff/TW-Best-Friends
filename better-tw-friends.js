@@ -24,7 +24,7 @@
 // ==/UserScript==
 
 var friends = [];
-var friendsBarModel = WestUi.FriendsBar.friendsBarUi.friendsBar;
+var friendsBarModel = null;
 
 function getActiveSesKeys() {
 	return Object.keys(Game.sesData);
@@ -49,8 +49,18 @@ function getFriendCount() {
 }
 
 function getFriendsList() {
-	Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
-		var clients = $.grep(data.players, (client) => client.player_id !== Character.playerId);
-		friends = $.map(clients, friendsBarModel.normalizeAvatars_);
-	});
+	if (!WestUi.FriendsBar.friendsBarUi) {
+		WestUi.FriendsBar.friendsBarUi = new west.ui.FriendsBarUi();
+		WestUi.FriendsBar.friendsBarUi.setType('friends');
+	}
+	friendsBarModel = WestUi.FriendsBar.friendsBarUi.friendsBar;
+
+	if (friendsBarModel.getType() === 'friends') {
+		friends = $.grep(friendsBarModel.result_.players, (client) => client.player_id !== Character.playerId);
+	} else {
+		Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
+			var clients = $.grep(data.players, (client) => client.player_id !== Character.playerId);
+			friends = $.map(clients, friendsBarModel.normalizeAvatars_);
+		});
+	}
 }
