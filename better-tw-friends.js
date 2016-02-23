@@ -24,7 +24,7 @@
 // ==/UserScript==
 
 var friends = [];
-var friendsBarModel = null;
+var lastSent = {};
 
 function getActiveSesKeys() {
 	return Object.keys(Game.sesData);
@@ -32,12 +32,10 @@ function getActiveSesKeys() {
 
 function getSesReadyCount() {
 	var yesterday = Date.now()/1000 - 3600*24;
-	var sesKey = getActiveSesKeys()[0];
-	var lastSent = friendsBarModel.eventActivations;
 	var count = 0;
 	$.each(friends, function (i, client) {
-		var neverSent = !lastSent.hasOwnProperty(client.player_id) || !lastSent[client.player_id].hasOwnProperty(sesKey);
-		if (neverSent || yesterday >= lastSent[client.player_id][sesKey]) {
+		var neverSent = !lastSent.hasOwnProperty(client.player_id);
+		if (neverSent || yesterday >= lastSent[client.player_id]) {
 			count++;
 		}
 	});
@@ -48,19 +46,23 @@ function getFriendCount() {
 	return friends.length;
 }
 
-function getFriendsList() {
-	if (!WestUi.FriendsBar.friendsBarUi) {
-		WestUi.FriendsBar.friendsBarUi = new west.ui.FriendsBarUi();
-		WestUi.FriendsBar.friendsBarUi.setType('friends');
-	}
-	friendsBarModel = WestUi.FriendsBar.friendsBarUi.friendsBar;
+function getFriendsList(resolve, reject) {
+	Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
+		var clients = $.grep(data.players, client => client.player_id !== Character.playerId);
+		friends = $.map(clients, west.storage.FriendsBar.prototype.normalizeAvatars_);
 
-	if (friendsBarModel.getType() === 'friends') {
-		friends = $.grep(friendsBarModel.result_.players, (client) => client.player_id !== Character.playerId);
-	} else {
-		Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
-			var clients = $.grep(data.players, (client) => client.player_id !== Character.playerId);
-			friends = $.map(clients, friendsBarModel.normalizeAvatars_);
+		var sesKey = getActiveSesKeys()[0];
+		$.each(data.eventActivations, function (i, eventActivation) {
+			if (eventActivation.event_name === sesKey) {
+				lastSent[eventActivation.friend_id] = eventActivation.activation_time;
+			}
 		});
-	}
+
+		resolve();
+	});
 }
+
+// new Promise(getFriendsList)
+// .then(getSesReadyCount)
+// .then(x => console.log(x));
+
