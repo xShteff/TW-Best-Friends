@@ -46,23 +46,46 @@ function getFriendCount() {
 	return friends.length;
 }
 
-function getFriendsList(resolve, reject) {
-	Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
-		var clients = $.grep(data.players, client => client.player_id !== Character.playerId);
-		friends = $.map(clients, west.storage.FriendsBar.prototype.normalizeAvatars_);
-
-		var sesKey = getActiveSesKeys()[0];
-		$.each(data.eventActivations, function (i, eventActivation) {
-			if (eventActivation.event_name === sesKey) {
-				lastSent[eventActivation.friend_id] = eventActivation.activation_time;
+function getFriendsList() {
+	return new Promise(function (resolve, reject) {
+		Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
+			if (data.error) {
+				return reject(data.msg);
 			}
-		});
 
-		resolve();
+			var clients = $.grep(data.players, client => client.player_id !== Character.playerId);
+			friends = $.map(clients, west.storage.FriendsBar.prototype.normalizeAvatars_);
+
+			var sesKey = getActiveSesKeys()[0];
+			$.each(data.eventActivations, function (i, eventActivation) {
+				if (eventActivation.event_name === sesKey) {
+					lastSent[eventActivation.friend_id] = eventActivation.activation_time;
+				}
+			});
+
+			return resolve(data.msg);
+		});
 	});
 }
 
-// new Promise(getFriendsList)
+function sendSesCurrency(friendId) {
+	return new Promise(function (resolve, reject) {
+		Ajax.remoteCall('friendsbar', 'event', {player_id: friendId, event: getActiveSesKeys()[0]}, function (data) {
+			if (data.error) {
+				return reject(data.msg);
+			}
+			lastSent[friendId] = data.activationTime;
+			return resolve(data.msg);
+		});
+	});
+}
+
+// getFriendsList()
 // .then(getSesReadyCount)
 // .then(x => console.log(x));
+//
+// sendSesCurrency(1337)
+// .then(msg => MessageSuccess(msg).show())
+// .catch(msg => MessageError(msg).show());
+
 
