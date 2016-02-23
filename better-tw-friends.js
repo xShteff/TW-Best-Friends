@@ -122,9 +122,9 @@ function sendSesCurrency(friendId) {
 // .catch(msg => MessageError(msg).show());
 
 EventHandler.listen('friend_added', function (client) {
-    friends.push(client);
+	friends.push(client);
 });
 
 EventHandler.listen('friend_removed', function (friendId) {
-    friends = $.grep(friends, client => client.player_id !== friendId);
+	friends = $.grep(friends, client => client.player_id !== friendId);
 });
