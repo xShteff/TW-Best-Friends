@@ -36,6 +36,12 @@ var friends = {};
 var lastSent = {};
 
 /**
+ * Records whether an ses:*_received event has been signalled since last downloading logs, assuming true upon login
+ * @type {Boolean}
+ */
+var newLogs = true;
+
+/**
  * Returns a list of keys for active events, eg Hearts. Practically guaranteed to have a length of 0 if no events are
  * running and a length of 1 otherwise (2 or more = internal beta only).
  * @returns {Array}
@@ -142,4 +148,8 @@ EventHandler.listen('friend_added', function (client) {
 
 EventHandler.listen('friend_removed', function (friendId) {
 	delete friends[friendId];
+});
+
+EventHandler.listen(s('ses:%1_received', 'hearts'), function (amount) {
+	newLogs = true;
 });
