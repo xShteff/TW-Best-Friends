@@ -24,10 +24,10 @@
 // ==/UserScript==
 
 /**
- * An array of Chat.Resource.Client-like (mostly) plain objects
- * @type {Array}
+ * A map of player ids to Chat.Resource.Client-like (mostly) plain objects
+ * @type {Object}
  */
-var friends = [];
+var friends = {};
 
 /**
  * A map of player ids to unix timestamps
@@ -64,8 +64,8 @@ function timeUntilSesReady(friendId) {
  */
 function getSesReadyCount() {
 	var count = 0;
-	$.each(friends, function (i, client) {
-		if (timeUntilSesReady(client.player_id) === 0) {
+	$.each(friends, function (playerId, client) {
+		if (timeUntilSesReady(playerId) === 0) {
 			count++;
 		}
 	});
@@ -77,7 +77,7 @@ function getSesReadyCount() {
  * @returns {Number}
  */
 function getFriendCount() {
-	return friends.length;
+	return Object.keys(friends).length;
 }
 
 /**
@@ -92,8 +92,11 @@ function getFriendsList() {
 				return reject(data.msg);
 			}
 
-			var clients = $.grep(data.players, client => client.player_id !== Character.playerId);
-			friends = $.map(clients, west.storage.FriendsBar.prototype.normalizeAvatars_);
+			$.each(data.players, function (i, client) {
+				if (client.player_id !== Character.playerId) {
+					friends[client.player_id] = west.storage.FriendsBar.prototype.normalizeAvatars_(client, i);
+				}
+			});
 
 			var sesKey = getActiveSesKeys()[0];
 			$.each(data.eventActivations, function (i, eventActivation) {
@@ -134,9 +137,9 @@ function sendSesCurrency(friendId) {
 // .catch(msg => MessageError(msg).show());
 
 EventHandler.listen('friend_added', function (client) {
-	friends.push(client);
+	friends[client.player_id] = client;
 });
 
 EventHandler.listen('friend_removed', function (friendId) {
-	friends = $.grep(friends, client => client.player_id !== friendId);
+	delete friends[friendId];
 });
