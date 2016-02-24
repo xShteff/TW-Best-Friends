@@ -45,15 +45,27 @@ function getActiveSesKeys() {
 }
 
 /**
+ * Returns the number of seconds until you can send ses currency to a friend, or 0 if you can send it immediately.
+ * Friends list must be initiated first.
+ * @param {Number} friendId
+ * @returns {Number}
+ */
+function timeUntilSesReady(friendId) {
+	if (!lastSent.hasOwnProperty(friendId)) {
+		return 0;
+	}
+	var yesterday = Date.now()/1000 - 3600*24;
+	return Math.max(0, Math.floor(lastSent[friendId] - yesterday));
+}
+
+/**
  * Returns the number of friends you can currently send ses currency to. Friends list must be initiated first.
  * @returns {Number}
  */
 function getSesReadyCount() {
-	var yesterday = Date.now()/1000 - 3600*24;
 	var count = 0;
 	$.each(friends, function (i, client) {
-		var neverSent = !lastSent.hasOwnProperty(client.player_id);
-		if (neverSent || yesterday >= lastSent[client.player_id]) {
+		if (timeUntilSesReady(client.player_id) === 0) {
 			count++;
 		}
 	});
