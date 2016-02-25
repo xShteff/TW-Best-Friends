@@ -153,6 +153,85 @@ function sendSesCurrency(friendId) {
 	});
 }
 
+function processLogs() {
+	if (!newLogs) return Promise.resolve();
+
+	var sesKey = getActiveSesKeys()[0];
+	if (sesKey !== logsMetadata.sesKey) {
+		playerLogs = {};
+		dropTypeLogs = {};
+		logsMetadata.sesKey = sesKey;
+	}
+
+	return new Promise(function (resolve, reject) {
+		var generator = processLogsBatches(sesKey, resolve, reject);
+		generator.next();
+		generator.next(function () { generator.next(); });
+	});
+}
+
+/**
+ * This whole function is a big hack to emulate ES7 async/await. If it were supported by current browsers, we could
+ * simply make processLogs async and await each processLogBatch there in a loop, then resolve the promise. We can't use
+ * promises' .then either because we don't know how many pages there are in advance; we would need something like .while
+ * and severe mental backflips. The next best thing is the yield keyword provided by generators, which allows us to
+ * "pause" execution in a similar way. We obviously can't stick this in the promise directly so it exists here instead,
+ * and processLogs just calls it and hands along its resolve and reject functions.
+ *
+ * @see https://davidwalsh.name/async-generators
+ * @see https://esdiscuss.org/topic/retrieving-generator-references
+ *
+ * The core idea here is that once a batch of logs is done processing asynchronously, it resumes the generator, which
+ * starts the next batch. To do that, we need to pass a reference to this generator onto processLogBatch. Generators are
+ * not initialised with the new keyword, so annoyingly `this` does not point to the generator object. However, it is
+ * possible to resume suspended generators with an overwritten value. This is why we yield immediately -- so processLogs
+ * can resume the execution with a reference to the generator object.
+ *
+ * After that it is relatively straightforward. The generator is suspended and resumed via the callback until there are
+ * no more pages of logs to process. At that point we update the newestSeen data, save everything to local storage and
+ * resolve the promise satisfied everything is ready to open the window.
+ * @param {String} sesKey
+ * @param {Function} resolve
+ * @param {Function} reject
+ */
+function* processLogsBatches(sesKey, resolve, reject) {
+	var callback = yield;
+	var stats = {newest: logsMetadata.newestSeen, hasNext: true};
+	var page = 1;
+	do {
+		yield processLogBatch(sesKey, page++, stats, callback);
+	} while (stats.hasNext);
+	logsMetadata.newestSeen = stats.newest;
+	saveLogs();
+	newLogs = false;
+	return resolve();
+}
+
+// WIP
+function processLogBatch(sesKey, page, stats, callback) {
+	Ajax.remoteCallMode('ses', 'log', {ses_id: sesKey, page: page, limit: 100}, function (data) {
+		if (data.error) {
+			return reject(data.msg);
+		}
+
+		stats.hasNext = !data.entries.some(function (entry, i) {
+			if (entry.date <= logsMetadata.newestSeen) {
+				return true;
+			} else if (i === 0 && entry.data > newest) {
+				newest = entry.data;
+			}
+
+			dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + entry.value;
+			if (entry.type === 'friendDrop') {
+				var senderId = JSON.parse(entry.details).player_id;
+				playerLogs[senderId] = (playerLogs[senderId] || 0) + entry.value;
+			}
+		}) && data.hasNext;
+
+		callback();
+	});
+}
+
 /**
  * Save playerLogs and dropTypeLogs into local storage.
  */
