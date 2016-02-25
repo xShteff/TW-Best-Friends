@@ -1,5 +1,6 @@
 // ==UserScript==
-// @name            Better TW Friends
+// @name            TW Best Friends
+// @description     Sending tamboola currency made easier
 // @author          xShteff, Diggo11
 // @match           https://*.the-west.net/game.php*
 // @match           https://*.the-west.de/game.php*
@@ -190,31 +191,40 @@ $('head').append(styling);
 
 //Generating an icon so you can open the window
 var icon = $('<div></div>').attr({
-    'title': 'BTTW',
+    'title': 'TW Best Friends',
     'class': 'menulink'
 }).css({
-    'background': 'url()',
+    'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
     'background-position': '0px 0px'
 }).mouseleave(function() {
     $(this).css("background-position", "0px 0px");
 }).mouseenter(function(e) {
     $(this).css("background-position", "25px 0px");
 }).click(function() {
-    getFriendsList().then(function() {
-			openFriendsWindow();
-		});
+	getFriendsList().then(function() {
+		openFriendsWindow();
 	});
+});
+
+//Generating the end of the button
 var fix = $('<div></div>').attr({
     'class': 'menucontainer_bottom'
 });
-jQuery("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
+
+//Adding it
+$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
     'class': 'ui_menucontainer',
-    'id': 'bttw'
+    'id': 'twbf'
 }).append(icon).append(fix));
 
 
 var generateSendLink = function(pid) {
-    return '<a onclick="sendSesCurrency(' + pid + ')"> Send </a>';
+	var link = $('<a></a>').text('Send').click(function() {
+		sendSesCurrency(pid);
+		$(this).parent().parent().fadeOut();
+		new UserMessage("Thingies sent", UserMessage.TYPE_SUCCESS).show();
+	});
+    return link;
 }
 
 var appendPlayerToTable = function(table, pid) {
@@ -232,5 +242,5 @@ var openFriendsWindow = function() {
         }
     });
     windowContent.appendContent(friendsTable.divMain);
-    wman.open('kek').setTitle('kek').appendToContentPane(windowContent.divMain).setMiniTitle('kek2').setSize('400', '400');
+    wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
 }
