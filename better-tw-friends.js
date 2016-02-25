@@ -156,9 +156,10 @@ function sendSesCurrency(friendId) {
  * Save playerLogs and dropTypeLogs into local storage.
  */
 function saveLogs() {
-	localStorage.setItem(JSON.stringify(logsMetadata));
-	localStorage.setItem(JSON.stringify(playerLogs));
-	localStorage.setItem(JSON.stringify(dropTypeLogs));
+	var prefix = 'xshteff.betterfriends.';
+	localStorage.setItem(prefix + 'logsMetadata', JSON.stringify(logsMetadata));
+	localStorage.setItem(prefix + 'playerLogs', JSON.stringify(playerLogs));
+	localStorage.setItem(prefix + 'dropTypeLogs', JSON.stringify(dropTypeLogs));
 }
 
 // getFriendsList()
