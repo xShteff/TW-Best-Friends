@@ -234,7 +234,7 @@ var appendPlayerToTable = function(table, pid) {
 var openFriendsWindow = function() {
     var windowContent = new west.gui.Scrollpane;
     var friendsTable = new west.gui.Table;
-    friendsTable.addColumn('player-names');
+    friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
     friendsTable.addColumn('send-links');
     $.each(friends, function(pid) {
         if(!timeUntilSesReady(pid)){
