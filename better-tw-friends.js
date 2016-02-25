@@ -172,7 +172,8 @@ function saveLogs() {
 // .catch(msg => MessageError(msg).show());
 
 EventHandler.listen('friend_added', function (client) {
-	friends[client.player_id] = client;
+	// FIXME
+	friends[client.playerId] = client;
 });
 
 EventHandler.listen('friend_removed', function (friendId) {
