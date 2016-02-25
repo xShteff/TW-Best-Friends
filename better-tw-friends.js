@@ -42,6 +42,24 @@ var lastSent = {};
 var newLogs = true;
 
 /**
+ * A map containing information such as the most recent log processed, etc
+ * @type {Object}
+ */
+var logsMetadata = JSON.parse(localStorage.getItem('xshteff.betterfriends.logsMetadata')) || {};
+
+/**
+ * A map of player ids to ses currency received from this player
+ * @type {Object}
+ */
+var playerLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.playerLogs')) || {};
+
+/**
+ * A map of ses drop types to ses currency received from this drop type
+ * @type {Object}
+ */
+var dropTypeLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.dropTypeLogs')) || {};
+
+/**
  * Returns a list of keys for active events, eg Hearts. Practically guaranteed to have a length of 0 if no events are
  * running and a length of 1 otherwise (2 or more = internal beta only).
  * @returns {Array}
@@ -132,6 +150,15 @@ function sendSesCurrency(friendId) {
 			return resolve(data.msg);
 		});
 	});
+}
+
+/**
+ * Save playerLogs and dropTypeLogs into local storage.
+ */
+function saveLogs() {
+	localStorage.setItem(JSON.stringify(logsMetadata));
+	localStorage.setItem(JSON.stringify(playerLogs));
+	localStorage.setItem(JSON.stringify(dropTypeLogs));
 }
 
 // getFriendsList()
