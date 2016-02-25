@@ -200,10 +200,10 @@ var icon = $('<div></div>').attr({
 }).mouseenter(function(e) {
     $(this).css("background-position", "25px 0px");
 }).click(function() {
-    getFriendsList();
-    //I need a small delay, so I can actually show some content
-    window.setTimeout(openFriendsWindow, 1000);
-});
+    getFriendsList().then(function() {
+			openFriendsWindow();
+		});
+	});
 var fix = $('<div></div>').attr({
     'class': 'menucontainer_bottom'
 });
