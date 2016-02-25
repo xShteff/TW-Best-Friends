@@ -181,3 +181,56 @@ EventHandler.listen('friend_removed', function (friendId) {
 EventHandler.listen(s('ses:%1_received', 'hearts'), function (amount) {
 	newLogs = true;
 });
+
+// Right, here's the fun part.
+
+//Manually adding some styling for the table
+var styling = $('<style></style>').text('.send-links { float:right; margin-right:5px; } ');
+$('head').append(styling);
+
+//Generating an icon so you can open the window
+var icon = $('<div></div>').attr({
+    'title': 'BTTW',
+    'class': 'menulink'
+}).css({
+    'background': 'url()',
+    'background-position': '0px 0px'
+}).mouseleave(function() {
+    $(this).css("background-position", "0px 0px");
+}).mouseenter(function(e) {
+    $(this).css("background-position", "25px 0px");
+}).click(function() {
+    getFriendsList();
+    //I need a small delay, so I can actually show some content
+    window.setTimeout(openFriendsWindow, 1000);
+});
+var fix = $('<div></div>').attr({
+    'class': 'menucontainer_bottom'
+});
+jQuery("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
+    'class': 'ui_menucontainer',
+    'id': 'bttw'
+}).append(icon).append(fix));
+
+
+var generateSendLink = function(pid) {
+    return '<a onclick="sendSesCurrency(' + pid + ')"> Send </a>';
+}
+
+var appendPlayerToTable = function(table, pid) {
+    table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'send-links', generateSendLink(pid));
+}
+
+var openFriendsWindow = function() {
+    var windowContent = new west.gui.Scrollpane;
+    var friendsTable = new west.gui.Table;
+    friendsTable.addColumn('player-names');
+    friendsTable.addColumn('send-links');
+    $.each(friends, function(pid) {
+        if(!timeUntilSesReady(pid)){
+            appendPlayerToTable(friendsTable, pid);
+        }
+    });
+    windowContent.appendContent(friendsTable.divMain);
+    wman.open('kek').setTitle('kek').appendToContentPane(windowContent.divMain).setMiniTitle('kek2').setSize('400', '400');
+}
