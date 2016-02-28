@@ -302,8 +302,10 @@ function initialiseScript() {
 	getFriendsList().then(function () {
 		getSesReadyCount(); // display it pls Allen
 		getFriendCount(); // display it pls Allen
-		processLogs(true).then(/* add/enable button to open window, no earlier than here pls */);
-	});
+		return processLogs(true)
+	}).then(
+		// add/enable button to open window, no earlier than here pls
+	);
 
 	EventHandler.listen('friend_added', function (client) {
 		// FIXME
