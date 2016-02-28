@@ -261,7 +261,7 @@ function processLogBatch(sesKey, page, stats, callback, background) {
 		}) && data.hasNext;
 
 		if (background) {
-			setTimeout(callback, 3000);
+			setTimeout(callback, 1000);
 		} else {
 			callback();
 		}
@@ -295,18 +295,35 @@ function saveLogs() {
 // .then(msg => MessageSuccess(msg).show())
 // .catch(msg => MessageError(msg).show());
 
-EventHandler.listen('friend_added', function (client) {
-	// FIXME
-	friends[client.playerId] = client;
-});
+function initialiseScript() {
+	var sesKeys = getActiveSesKeys();
+	if (sesKeys.length === 0) return;
 
-EventHandler.listen('friend_removed', function (friendId) {
-	delete friends[friendId];
-});
+	getFriendsList().then(function () {
+		getSesReadyCount(); // display it pls Allen
+		getFriendCount(); // display it pls Allen
+		processLogs(true).then(/* add/enable button to open window, no earlier than here pls */);
+	});
 
-EventHandler.listen(s('ses:%1_received', 'hearts'), function (amount) {
-	newLogs = true;
-});
+	EventHandler.listen('friend_added', function (client) {
+		// FIXME
+		friends[client.playerId] = client;
+	});
+
+	EventHandler.listen('friend_removed', function (friendId) {
+		delete friends[friendId];
+	});
+
+	EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
+		newLogs = true;
+	});
+}
+
+function openWindow() {
+	processLogs(false).then(function () {
+		// open it pls Allen
+	});
+}
 
 // Right, here's the fun part.
 
