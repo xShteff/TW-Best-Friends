@@ -61,6 +61,12 @@ var playerLogs = null;
 var dropTypeLogs = null;
 
 /**
+ * We don't want a race between two log processing functions
+ * @type {Boolean}
+ */
+var logsLocked = false;
+
+/**
  * Returns a list of keys for active events, eg Hearts. Practically guaranteed to have a length of 0 if no events are
  * running and a length of 1 otherwise (2 or more = internal beta only).
  * @returns {Array}
@@ -154,8 +160,11 @@ function sendSesCurrency(friendId) {
 }
 
 function processLogs() {
+	if (logsLocked) throw new Error("Please don't try and process the logs twice at the same time.");
 	if (!newLogs) return Promise.resolve();
+	logsLocked = true;
 
+	loadLogs();
 	var sesKey = getActiveSesKeys()[0];
 	if (sesKey !== logsMetadata.sesKey) {
 		playerLogs = {};
@@ -204,6 +213,7 @@ function* processLogsBatches(sesKey, resolve, reject) {
 	logsMetadata.newestSeen = stats.newest;
 	saveLogs();
 	newLogs = false;
+	logsLocked = false;
 	return resolve();
 }
 
@@ -211,6 +221,7 @@ function* processLogsBatches(sesKey, resolve, reject) {
 function processLogBatch(sesKey, page, stats, callback) {
 	Ajax.remoteCallMode('ses', 'log', {ses_id: sesKey, page: page, limit: 100}, function (data) {
 		if (data.error) {
+			logsLocked = false;
 			return reject(data.msg);
 		}
 
