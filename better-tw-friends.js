@@ -25,7 +25,7 @@
 // ==/UserScript==
 
 /**
- * A map of player ids to Chat.Resource.Client-like (mostly) plain objects
+ * A map of player ids to plain objects describing the character
  * @type {Object}
  */
 var friends = {};
@@ -126,6 +126,9 @@ function getFriendsList() {
 			$.each(data.players, function (i, client) {
 				if (client.player_id !== Character.playerId) {
 					friends[client.player_id] = west.storage.FriendsBar.prototype.normalizeAvatars_(client, i);
+					delete friends[client.player_id].experience;
+					delete friends[client.player_id].x;
+					delete friends[client.player_id].y;
 				}
 			});
 
@@ -308,8 +311,15 @@ function initialiseScript() {
 	);
 
 	EventHandler.listen('friend_added', function (client) {
-		// FIXME
-		friends[client.playerId] = client;
+		friends[client.playerId] = {
+			avatar: client.avatar,
+			class: client.charClass,
+			level: client.level,
+			name: client.pname,
+			player_id: client.playerId,
+			profession_id: client.professionId,
+			subclass: client.subClass
+		};
 	});
 
 	EventHandler.listen('friend_removed', function (friendId) {
