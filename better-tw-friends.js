@@ -159,7 +159,14 @@ function sendSesCurrency(friendId) {
 	});
 }
 
-function processLogs() {
+/**
+ * Downloads any new ses currency logs and processes them. If the last seen ses key does not match then it deletes the
+ * currently held logs. Optionally adds a delay between log fetches to avoid streaks of bad luck. If you want more info
+ * see the functions below.
+ * @param {Boolean} background
+ * @returns {Promise}
+ */
+function processLogs(background) {
 	if (logsLocked) throw new Error("Please don't try and process the logs twice at the same time.");
 	if (!newLogs) return Promise.resolve();
 	logsLocked = true;
@@ -173,9 +180,9 @@ function processLogs() {
 	}
 
 	return new Promise(function (resolve, reject) {
-		var generator = processLogsBatches(sesKey, resolve, reject);
+		var generator = processLogsBatches(sesKey, background, resolve, reject);
 		generator.next();
-		generator.next(function () { generator.next(); });
+		generator.next(generator.next);
 	});
 }
 
@@ -200,15 +207,16 @@ function processLogs() {
  * no more pages of logs to process. At that point we update the newestSeen data, save everything to local storage and
  * resolve the promise satisfied everything is ready to open the window.
  * @param {String} sesKey
+ * @param {Boolean} background
  * @param {Function} resolve
  * @param {Function} reject
  */
-function* processLogsBatches(sesKey, resolve, reject) {
+function* processLogsBatches(sesKey, background, resolve, reject) {
 	var callback = yield;
 	var stats = {newest: logsMetadata.newestSeen, hasNext: true};
 	var page = 1;
 	do {
-		yield processLogBatch(sesKey, page++, stats, callback);
+		yield processLogBatch(sesKey, page++, stats, callback, background);
 	} while (stats.hasNext);
 	logsMetadata.newestSeen = stats.newest;
 	saveLogs();
@@ -217,8 +225,16 @@ function* processLogsBatches(sesKey, resolve, reject) {
 	return resolve();
 }
 
-// WIP
-function processLogBatch(sesKey, page, stats, callback) {
+/**
+ * Processes a given page of logs and updates playerLogs and dropTypeLogs. Stats object is used like pass-by-reference
+ * to return both the newest log date seen and whether more new log pages are available.
+ * @param {String} sesKey
+ * @param {Number} page
+ * @param {Object} stats
+ * @param {Function} callback
+ * @param {Boolean} background
+ */
+function processLogBatch(sesKey, page, stats, callback, background) {
 	Ajax.remoteCallMode('ses', 'log', {ses_id: sesKey, page: page, limit: 100}, function (data) {
 		if (data.error) {
 			logsLocked = false;
@@ -227,19 +243,28 @@ function processLogBatch(sesKey, page, stats, callback) {
 
 		stats.hasNext = !data.entries.some(function (entry, i) {
 			if (entry.date <= logsMetadata.newestSeen) {
-				return true;
-			} else if (i === 0 && entry.data > newest) {
-				newest = entry.data;
+				return true; // short circuit
+			} else if (i === 0 && entry.date > stats.newest) {
+				stats.newest = entry.date;
 			}
 
 			dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + entry.value;
 			if (entry.type === 'friendDrop') {
 				var senderId = JSON.parse(entry.details).player_id;
-				playerLogs[senderId] = (playerLogs[senderId] || 0) + entry.value;
+				if (playerLogs.hasOwnProperty(senderId)) {
+					playerLogs[senderId].total += entry.value;
+					playerLogs[senderId].frequency.push(entry.date);
+				} else {
+					playerLogs[senderId] = {total: entry.value, frequency: [entry.date]};
+				}
 			}
 		}) && data.hasNext;
 
-		callback();
+		if (background) {
+			setTimeout(callback, 3000);
+		} else {
+			callback();
+		}
 	});
 }
 
