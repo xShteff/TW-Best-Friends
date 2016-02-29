@@ -216,7 +216,7 @@ function processLogs(background) {
  */
 function* processLogsBatches(sesKey, background, resolve, reject) {
 	var callback = yield;
-	var stats = {newest: logsMetadata.newestSeen, hasNext: true};
+	var stats = {newest: logsMetadata.newestSeen || 0, hasNext: true};
 	var page = 1;
 	do {
 		yield processLogBatch(sesKey, page++, stats, callback, background);
