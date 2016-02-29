@@ -306,9 +306,7 @@ function initialiseScript() {
 		getSesReadyCount(); // display it pls Allen
 		getFriendCount(); // display it pls Allen
 		return processLogs(true)
-	}).then(
-		// add/enable button to open window, no earlier than here pls
-	);
+	}).then(initialiseButton);
 
 	EventHandler.listen('friend_added', function (client) {
 		friends[client.playerId] = {
@@ -333,7 +331,17 @@ function initialiseScript() {
 
 function openWindow() {
 	processLogs(false).then(function () {
-		// open it pls Allen
+		var windowContent = new west.gui.Scrollpane();
+		var friendsTable = new west.gui.Table();
+		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
+		friendsTable.addColumn('send-links');
+		$.each(friends, function(pid) {
+			if(!timeUntilSesReady(pid)){
+				appendPlayerToTable(friendsTable, pid);
+			}
+		});
+		windowContent.appendContent(friendsTable.divMain);
+		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
 	});
 }
 
@@ -343,58 +351,46 @@ function openWindow() {
 var styling = $('<style></style>').text('.send-links { float:right; margin-right:5px; } ');
 $('head').append(styling);
 
-//Generating an icon so you can open the window
-var icon = $('<div></div>').attr({
-    'title': 'TW Best Friends',
-    'class': 'menulink'
-}).css({
-    'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
-    'background-position': '0px 0px'
-}).mouseleave(function() {
-    $(this).css("background-position", "0px 0px");
-}).mouseenter(function(e) {
-    $(this).css("background-position", "25px 0px");
-}).click(function() {
-	getFriendsList().then(function() {
-		openFriendsWindow();
+function initialiseButton() {
+	//Generating an icon so you can open the window
+	var icon = $('<div></div>').attr({
+		'title': 'TW Best Friends',
+		'class': 'menulink'
+	}).css({
+		'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
+		'background-position': '0px 0px'
+	}).mouseleave(function () {
+		$(this).css("background-position", "0px 0px");
+	}).mouseenter(function (e) {
+		$(this).css("background-position", "25px 0px");
+	}).click(function () {
+		getFriendsList().then(function () {
+			openFriendsWindow();
+		});
 	});
-});
 
-//Generating the end of the button
-var fix = $('<div></div>').attr({
-    'class': 'menucontainer_bottom'
-});
+	//Generating the end of the button
+	var fix = $('<div></div>').attr({
+		'class': 'menucontainer_bottom'
+	});
 
-//Adding it
-$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
-    'class': 'ui_menucontainer',
-    'id': 'twbf'
-}).append(icon).append(fix));
+	//Adding it
+	$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
+		'class': 'ui_menucontainer',
+		'id': 'twbf'
+	}).append(icon).append(fix));
+}
 
 
 var generateSendLink = function(pid) {
-	var link = $('<a></a>').text('Send').click(function() {
-		sendSesCurrency(pid);
+	return $('<a></a>').text('Send').click(function() {
+		sendSesCurrency(pid)
+			.then(msg => MessageSuccess(msg).show())
+			.catch(msg => MessageError(msg).show());
 		$(this).parent().parent().fadeOut();
-		new UserMessage("Thingies sent", UserMessage.TYPE_SUCCESS).show();
 	});
-    return link;
-}
+};
 
 var appendPlayerToTable = function(table, pid) {
-    table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'send-links', generateSendLink(pid));
-}
-
-var openFriendsWindow = function() {
-    var windowContent = new west.gui.Scrollpane;
-    var friendsTable = new west.gui.Table;
-    friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
-    friendsTable.addColumn('send-links');
-    $.each(friends, function(pid) {
-        if(!timeUntilSesReady(pid)){
-            appendPlayerToTable(friendsTable, pid);
-        }
-    });
-    windowContent.appendContent(friendsTable.divMain);
-    wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
-}
+	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'send-links', generateSendLink(pid));
+};
