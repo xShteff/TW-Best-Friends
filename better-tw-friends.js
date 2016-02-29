@@ -72,7 +72,7 @@ var logsLocked = false;
  * @returns {Array}
  */
 function getActiveSesKeys() {
-	return Object.keys(Game.sesData);
+    return Object.keys(Game.sesData);
 }
 
 /**
@@ -82,11 +82,11 @@ function getActiveSesKeys() {
  * @returns {Number}
  */
 function timeUntilSesReady(friendId) {
-	if (!lastSent.hasOwnProperty(friendId)) {
-		return 0;
-	}
-	var yesterday = Date.now()/1000 - 3600*24;
-	return Math.max(0, Math.floor(lastSent[friendId] - yesterday));
+    if (!lastSent.hasOwnProperty(friendId)) {
+        return 0;
+    }
+    var yesterday = Date.now() / 1000 - 3600 * 24;
+    return Math.max(0, Math.floor(lastSent[friendId] - yesterday));
 }
 
 /**
@@ -94,13 +94,13 @@ function timeUntilSesReady(friendId) {
  * @returns {Number}
  */
 function getSesReadyCount() {
-	var count = 0;
-	$.each(friends, function (playerId, client) {
-		if (timeUntilSesReady(playerId) === 0) {
-			count++;
-		}
-	});
-	return count;
+    var count = 0;
+    $.each(friends, function(playerId, client) {
+        if (timeUntilSesReady(playerId) === 0) {
+            count++;
+        }
+    });
+    return count;
 }
 
 /**
@@ -108,7 +108,7 @@ function getSesReadyCount() {
  * @returns {Number}
  */
 function getFriendCount() {
-	return Object.keys(friends).length;
+    return Object.keys(friends).length;
 }
 
 /**
@@ -117,31 +117,33 @@ function getFriendCount() {
  * @returns {Promise}
  */
 function getFriendsList() {
-	return new Promise(function (resolve, reject) {
-		Ajax.remoteCallMode('friendsbar', 'search', {search_type: 'friends'}, function (data) {
-			if (data.error) {
-				return reject(data.msg);
-			}
+    return new Promise(function(resolve, reject) {
+        Ajax.remoteCallMode('friendsbar', 'search', {
+            search_type: 'friends'
+        }, function(data) {
+            if (data.error) {
+                return reject(data.msg);
+            }
 
-			$.each(data.players, function (i, client) {
-				if (client.player_id !== Character.playerId) {
-					friends[client.player_id] = west.storage.FriendsBar.prototype.normalizeAvatars_(client, i);
-					delete friends[client.player_id].experience;
-					delete friends[client.player_id].x;
-					delete friends[client.player_id].y;
-				}
-			});
+            $.each(data.players, function(i, client) {
+                if (client.player_id !== Character.playerId) {
+                    friends[client.player_id] = west.storage.FriendsBar.prototype.normalizeAvatars_(client, i);
+                    delete friends[client.player_id].experience;
+                    delete friends[client.player_id].x;
+                    delete friends[client.player_id].y;
+                }
+            });
 
-			var sesKey = getActiveSesKeys()[0];
-			$.each(data.eventActivations, function (i, eventActivation) {
-				if (eventActivation.event_name === sesKey) {
-					lastSent[eventActivation.friend_id] = eventActivation.activation_time;
-				}
-			});
+            var sesKey = getActiveSesKeys()[0];
+            $.each(data.eventActivations, function(i, eventActivation) {
+                if (eventActivation.event_name === sesKey) {
+                    lastSent[eventActivation.friend_id] = eventActivation.activation_time;
+                }
+            });
 
-			return resolve(data.msg);
-		});
-	});
+            return resolve(data.msg);
+        });
+    });
 }
 
 /**
@@ -151,15 +153,18 @@ function getFriendsList() {
  * @returns {Promise}
  */
 function sendSesCurrency(friendId) {
-	return new Promise(function (resolve, reject) {
-		Ajax.remoteCall('friendsbar', 'event', {player_id: friendId, event: getActiveSesKeys()[0]}, function (data) {
-			if (data.error) {
-				return reject(data.msg);
-			}
-			lastSent[friendId] = data.activationTime;
-			return resolve(data.msg);
-		});
-	});
+    return new Promise(function(resolve, reject) {
+        Ajax.remoteCall('friendsbar', 'event', {
+            player_id: friendId,
+            event: getActiveSesKeys()[0]
+        }, function(data) {
+            if (data.error) {
+                return reject(data.msg);
+            }
+            lastSent[friendId] = data.activationTime;
+            return resolve(data.msg);
+        });
+    });
 }
 
 /**
@@ -170,23 +175,23 @@ function sendSesCurrency(friendId) {
  * @returns {Promise}
  */
 function processLogs(background) {
-	if (logsLocked) throw new Error("Please don't try and process the logs twice at the same time.");
-	if (!newLogs) return Promise.resolve();
-	logsLocked = true;
+    if (logsLocked) throw new Error("Please don't try and process the logs twice at the same time.");
+    if (!newLogs) return Promise.resolve();
+    logsLocked = true;
 
-	loadLogs();
-	var sesKey = getActiveSesKeys()[0];
-	if (sesKey !== logsMetadata.sesKey) {
-		playerLogs = {};
-		dropTypeLogs = {};
-		logsMetadata.sesKey = sesKey;
-	}
+    loadLogs();
+    var sesKey = getActiveSesKeys()[0];
+    if (sesKey !== logsMetadata.sesKey) {
+        playerLogs = {};
+        dropTypeLogs = {};
+        logsMetadata.sesKey = sesKey;
+    }
 
-	return new Promise(function (resolve, reject) {
-		var generator = processLogsBatches(sesKey, background, resolve, reject);
-		generator.next();
-		generator.next(generator.next);
-	});
+    return new Promise(function(resolve, reject) {
+        var generator = processLogsBatches(sesKey, background, resolve, reject);
+        generator.next();
+        generator.next(generator.next);
+    });
 }
 
 /**
@@ -214,18 +219,21 @@ function processLogs(background) {
  * @param {Function} resolve
  * @param {Function} reject
  */
-function* processLogsBatches(sesKey, background, resolve, reject) {
-	var callback = yield;
-	var stats = {newest: logsMetadata.newestSeen, hasNext: true};
-	var page = 1;
-	do {
-		yield processLogBatch(sesKey, page++, stats, callback, background);
-	} while (stats.hasNext);
-	logsMetadata.newestSeen = stats.newest;
-	saveLogs();
-	newLogs = false;
-	logsLocked = false;
-	return resolve();
+function * processLogsBatches(sesKey, background, resolve, reject) {
+    var callback = yield;
+    var stats = {
+        newest: logsMetadata.newestSeen,
+        hasNext: true
+    };
+    var page = 1;
+    do {
+        yield processLogBatch(sesKey, page++, stats, callback, background);
+    } while (stats.hasNext);
+    logsMetadata.newestSeen = stats.newest;
+    saveLogs();
+    newLogs = false;
+    logsLocked = false;
+    return resolve();
 }
 
 /**
@@ -238,56 +246,63 @@ function* processLogsBatches(sesKey, background, resolve, reject) {
  * @param {Boolean} background
  */
 function processLogBatch(sesKey, page, stats, callback, background) {
-	Ajax.remoteCallMode('ses', 'log', {ses_id: sesKey, page: page, limit: 100}, function (data) {
-		if (data.error) {
-			logsLocked = false;
-			return reject(data.msg);
-		}
+    Ajax.remoteCallMode('ses', 'log', {
+        ses_id: sesKey,
+        page: page,
+        limit: 100
+    }, function(data) {
+        if (data.error) {
+            logsLocked = false;
+            return reject(data.msg);
+        }
 
-		stats.hasNext = !data.entries.some(function (entry, i) {
-			if (entry.date <= logsMetadata.newestSeen) {
-				return true; // short circuit
-			} else if (i === 0 && entry.date > stats.newest) {
-				stats.newest = entry.date;
-			}
+        stats.hasNext = !data.entries.some(function(entry, i) {
+            if (entry.date <= logsMetadata.newestSeen) {
+                return true; // short circuit
+            } else if (i === 0 && entry.date > stats.newest) {
+                stats.newest = entry.date;
+            }
 
-			dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + entry.value;
-			if (entry.type === 'friendDrop') {
-				var senderId = JSON.parse(entry.details).player_id;
-				if (playerLogs.hasOwnProperty(senderId)) {
-					playerLogs[senderId].total += entry.value;
-					playerLogs[senderId].frequency.push(entry.date);
-				} else {
-					playerLogs[senderId] = {total: entry.value, frequency: [entry.date]};
-				}
-			}
-		}) && data.hasNext;
+            dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + entry.value;
+            if (entry.type === 'friendDrop') {
+                var senderId = JSON.parse(entry.details).player_id;
+                if (playerLogs.hasOwnProperty(senderId)) {
+                    playerLogs[senderId].total += entry.value;
+                    playerLogs[senderId].frequency.push(entry.date);
+                } else {
+                    playerLogs[senderId] = {
+                        total: entry.value,
+                        frequency: [entry.date]
+                    };
+                }
+            }
+        }) && data.hasNext;
 
-		if (background) {
-			setTimeout(callback, 1000);
-		} else {
-			callback();
-		}
-	});
+        if (background) {
+            setTimeout(callback, 1000);
+        } else {
+            callback();
+        }
+    });
 }
 
 /**
  * Load playerLogs and dropTypeLogs from local storage.
  */
 function loadLogs() {
-	logsMetadata = JSON.parse(localStorage.getItem('xshteff.betterfriends.logsMetadata')) || {};
-	playerLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.playerLogs')) || {};
-	dropTypeLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.dropTypeLogs')) || {};
+    logsMetadata = JSON.parse(localStorage.getItem('xshteff.betterfriends.logsMetadata')) || {};
+    playerLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.playerLogs')) || {};
+    dropTypeLogs = JSON.parse(localStorage.getItem('xshteff.betterfriends.dropTypeLogs')) || {};
 }
 
 /**
  * Save playerLogs and dropTypeLogs into local storage.
  */
 function saveLogs() {
-	var prefix = 'xshteff.betterfriends.';
-	localStorage.setItem(prefix + 'logsMetadata', JSON.stringify(logsMetadata));
-	localStorage.setItem(prefix + 'playerLogs', JSON.stringify(playerLogs));
-	localStorage.setItem(prefix + 'dropTypeLogs', JSON.stringify(dropTypeLogs));
+    var prefix = 'xshteff.betterfriends.';
+    localStorage.setItem(prefix + 'logsMetadata', JSON.stringify(logsMetadata));
+    localStorage.setItem(prefix + 'playerLogs', JSON.stringify(playerLogs));
+    localStorage.setItem(prefix + 'dropTypeLogs', JSON.stringify(dropTypeLogs));
 }
 
 // getFriendsList()
@@ -299,42 +314,41 @@ function saveLogs() {
 // .catch(msg => MessageError(msg).show());
 
 function initialiseScript() {
-	var sesKeys = getActiveSesKeys();
-	if (sesKeys.length === 0) return;
+    var sesKeys = getActiveSesKeys();
+    if (sesKeys.length === 0) return;
 
-	getFriendsList().then(function () {
-		getSesReadyCount(); // display it pls Allen
-		getFriendCount(); // display it pls Allen
-		return processLogs(true)
-	}).then(
-		// add/enable button to open window, no earlier than here pls
-	);
+    getFriendsList().then(function() {
+        getSesReadyCount(); // display it pls Allen
+        getFriendCount(); // display it pls Allen
+        return processLogs(true)
+    }).then(
+        // add/enable button to open window, no earlier than here pls
+        initialiseButton();
+    );
 
-	EventHandler.listen('friend_added', function (client) {
-		friends[client.playerId] = {
-			avatar: client.avatar,
-			class: client.charClass,
-			level: client.level,
-			name: client.pname,
-			player_id: client.playerId,
-			profession_id: client.professionId,
-			subclass: client.subClass
-		};
-	});
+    EventHandler.listen('friend_added', function(client) {
+        friends[client.playerId] = {
+            avatar: client.avatar,
+            class: client.charClass,
+            level: client.level,
+            name: client.pname,
+            player_id: client.playerId,
+            profession_id: client.professionId,
+            subclass: client.subClass
+        };
+    });
 
-	EventHandler.listen('friend_removed', function (friendId) {
-		delete friends[friendId];
-	});
+    EventHandler.listen('friend_removed', function(friendId) {
+        delete friends[friendId];
+    });
 
-	EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
-		newLogs = true;
-	});
+    EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function(amount) {
+        newLogs = true;
+    });
 }
 
 function openWindow() {
-	processLogs(false).then(function () {
-		// open it pls Allen
-	});
+    processLogs(false).then(openFriendsWindow);
 }
 
 // Right, here's the fun part.
@@ -344,40 +358,44 @@ var styling = $('<style></style>').text('.send-links { float:right; margin-right
 $('head').append(styling);
 
 //Generating an icon so you can open the window
-var icon = $('<div></div>').attr({
-    'title': 'TW Best Friends',
-    'class': 'menulink'
-}).css({
-    'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
-    'background-position': '0px 0px'
-}).mouseleave(function() {
-    $(this).css("background-position", "0px 0px");
-}).mouseenter(function(e) {
-    $(this).css("background-position", "25px 0px");
-}).click(function() {
-	getFriendsList().then(function() {
-		openFriendsWindow();
-	});
-});
 
-//Generating the end of the button
-var fix = $('<div></div>').attr({
-    'class': 'menucontainer_bottom'
-});
+var initialiseButton = function() {
+    var icon = $('<div></div>').attr({
+        'title': 'TW Best Friends',
+        'class': 'menulink'
+    }).css({
+        'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
+        'background-position': '0px 0px'
+    }).mouseleave(function() {
+        $(this).css("background-position", "0px 0px");
+    }).mouseenter(function(e) {
+        $(this).css("background-position", "25px 0px");
+    }).click(function() {
+        getFriendsList().then(function() {
+            openFriendsWindow();
+        });
+    });
 
-//Adding it
-$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
-    'class': 'ui_menucontainer',
-    'id': 'twbf'
-}).append(icon).append(fix));
+    //Generating the end of the button
+    var fix = $('<div></div>').attr({
+        'class': 'menucontainer_bottom'
+    });
+
+    //Adding it
+    $("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
+        'class': 'ui_menucontainer',
+        'id': 'twbf'
+    }).append(icon).append(fix));
+
+}
 
 
 var generateSendLink = function(pid) {
-	var link = $('<a></a>').text('Send').click(function() {
-		sendSesCurrency(pid);
-		$(this).parent().parent().fadeOut();
-		new UserMessage("Thingies sent", UserMessage.TYPE_SUCCESS).show();
-	});
+    var link = $('<a></a>').text('Send').click(function() {
+        sendSesCurrency(pid);
+        $(this).parent().parent().fadeOut();
+        new UserMessage("Thingies sent", UserMessage.TYPE_SUCCESS).show();
+    });
     return link;
 }
 
@@ -391,7 +409,7 @@ var openFriendsWindow = function() {
     friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
     friendsTable.addColumn('send-links');
     $.each(friends, function(pid) {
-        if(!timeUntilSesReady(pid)){
+        if (!timeUntilSesReady(pid)) {
             appendPlayerToTable(friendsTable, pid);
         }
     });
