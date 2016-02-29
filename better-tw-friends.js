@@ -390,3 +390,5 @@ var generateSendLink = function(pid) {
 var appendPlayerToTable = function(table, pid) {
 	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'send-links', generateSendLink(pid));
 };
+
+initialiseScript();
