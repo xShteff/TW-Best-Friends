@@ -185,7 +185,7 @@ function processLogs(background) {
 	return new Promise(function (resolve, reject) {
 		var generator = processLogsBatches(sesKey, background, resolve, reject);
 		generator.next();
-		generator.next(generator.next);
+		generator.next(() => generator.next());
 	});
 }
 
