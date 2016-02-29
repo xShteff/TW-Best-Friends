@@ -251,14 +251,14 @@ function processLogBatch(sesKey, page, stats, callback, background) {
 				stats.newest = entry.date;
 			}
 
-			dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + entry.value;
+			dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + +entry.value;
 			if (entry.type === 'friendDrop') {
 				var senderId = JSON.parse(entry.details).player_id;
 				if (playerLogs.hasOwnProperty(senderId)) {
-					playerLogs[senderId].total += entry.value;
+					playerLogs[senderId].total += +entry.value;
 					playerLogs[senderId].frequency.push(entry.date);
 				} else {
-					playerLogs[senderId] = {total: entry.value, frequency: [entry.date]};
+					playerLogs[senderId] = {total: +entry.value, frequency: [entry.date]};
 				}
 			}
 		}) && data.hasNext;
