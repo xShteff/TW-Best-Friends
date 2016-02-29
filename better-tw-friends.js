@@ -363,11 +363,7 @@ function initialiseButton() {
 		$(this).css("background-position", "0px 0px");
 	}).mouseenter(function (e) {
 		$(this).css("background-position", "25px 0px");
-	}).click(function () {
-		getFriendsList().then(function () {
-			openFriendsWindow();
-		});
-	});
+	}).click(openWindow);
 
 	//Generating the end of the button
 	var fix = $('<div></div>').attr({
