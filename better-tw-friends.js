@@ -383,7 +383,7 @@ var generateSendLink = function(pid) {
 		sendSesCurrency(pid)
 			.then(msg => MessageSuccess(msg).show())
 			.catch(msg => MessageError(msg).show());
-		$(this).parent().parent().fadeOut();
+		$(this).parent().parent().remove();
 	});
 };
 
