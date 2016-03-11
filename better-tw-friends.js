@@ -290,14 +290,9 @@ function saveLogs() {
 	localStorage.setItem(prefix + 'dropTypeLogs', JSON.stringify(dropTypeLogs));
 }
 
-// getFriendsList()
-// .then(getSesReadyCount)
-// .then(x => console.log(x));
-//
-// sendSesCurrency(1337)
-// .then(msg => MessageSuccess(msg).show())
-// .catch(msg => MessageError(msg).show());
-
+/**
+ * Starts the whole script.
+ */
 function initialiseScript() {
 	var sesKeys = getActiveSesKeys();
 	if (sesKeys.length === 0) return;
@@ -329,6 +324,11 @@ function initialiseScript() {
 	});
 }
 
+/**
+ * Building a send currency link by using a player id
+ * @param {Number} pid
+ * @returns {Anchor}
+ */
 var generateSendLink = function(pid) {
 	return $('<a></a>').text('Send').click(function() {
 		sendSesCurrency(pid)
@@ -337,6 +337,15 @@ var generateSendLink = function(pid) {
 		$(this).parent().parent().remove();
 	});
 };
+
+
+/**
+ * We're using this method to add a completely new row to the table. First thing we want to do is check if the player did send
+ * any currency. If it did, I'm displaying the amount of currency he sent, and all the dates when he did this.
+ * Then I'm checking if I can send currency to my friend, if I can't, I'm displaying the amount of time left until I can send it.
+ * @param {west.gui.Table} table
+ * @param {Number} pid
+ */
 var appendPlayerToTable = function(table, pid) {
 	var pLog = playerLogs[pid];
 	var totalAmount, logToolTip, currentText, currentDate;
@@ -344,13 +353,13 @@ var appendPlayerToTable = function(table, pid) {
 		totalAmount = 0;
 		logToolTip = $('<a>').attr('title', '<div>Player did not send you any currency yet.</div>').text(' (' + totalAmount + ')');
 	}
-	else{
+	else
+	{
 		totalAmount = pLog.total;
 		logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + totalAmount + ')');
 		for(var i = 0; i < playerLogs[pid].frequency.length; i++) {
 			currentText = logToolTip.attr('title');
 			currentDate = new Date(playerLogs[pid].frequency[i] * 1000);
-
 			if(i == playerLogs[pid].frequency.length - 1)
 				logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice() + '</center></div>');
 			else
@@ -373,7 +382,9 @@ var appendPlayerToTable = function(table, pid) {
 	}
 };
 
-
+/**
+ * Generating the GUI and displaying all the necessary information for the user.
+ */
 function openWindow() {
 	processLogs(false).then(function () {
 		var players = [];
@@ -386,8 +397,8 @@ function openWindow() {
 		var windowContent = new west.gui.Scrollpane();
 		var friendsTable = new west.gui.Table();
 		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
-		friendsTable.addColumn('send-links');
-		friendsTable.addColumn('total-received');
+		friendsTable.addColumn('send-links').appendToCell('head', 'send-links', 'Send');
+		friendsTable.addColumn('total-received').appendToCell('head', 'total-received', 'Received');
 		for(var i = 0; i < players.length; i++)
 			appendPlayerToTable(friendsTable, players[i].id);
 		windowContent.appendContent(friendsTable.divMain);
@@ -395,14 +406,18 @@ function openWindow() {
 	});
 }
 
-// Right, here's the fun part.
 
-//Manually adding some styling for the table
-var styling = $('<style></style>').text('.send-links { float:right; margin-right:5px; } ');
+
+/**
+ * Forcing some custom CSS styling, mainly for the table.
+ */
+var styling = $('<style></style>').text('.player-names, .send-links, .total-received { width:32% } .total-received { text-align:center; } .send-links { text-align:right; margin-right:5px; } ');
 $('head').append(styling);
 
+/**
+ * Adds a temporary button in game so you can open the window.
+ */
 function initialiseButton() {
-	//Generating an icon so you can open the window
 	var icon = $('<div></div>').attr({
 		'title': 'TW Best Friends',
 		'class': 'menulink'
@@ -414,13 +429,9 @@ function initialiseButton() {
 	}).mouseenter(function (e) {
 		$(this).css("background-position", "25px 0px");
 	}).click(openWindow);
-
-	//Generating the end of the button
 	var fix = $('<div></div>').attr({
 		'class': 'menucontainer_bottom'
 	});
-
-	//Adding it
 	$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
 		'class': 'ui_menucontainer',
 		'id': 'twbf'
