@@ -380,15 +380,9 @@ function openWindow() {
 		$.each(friends, function(pid) {
 			players.push({ 'id' : pid, 'timeUntilReady' : timeUntilSesReady(pid) });
 		});
-		function compare(a,b) {
-		  if (a.timeUntilReady < b.timeUntilReady)
-		    return -1;
-		  else if (a.timeUntilReady > b.timeUntilReady)
-		    return 1;
-		  else 
-		    return 0;
-		}
-		players.sort(compare);
+		players.sort(function(a, b) {
+			return a.timeUntilReady - b.timeUntilReady;
+		});
 		var windowContent = new west.gui.Scrollpane();
 		var friendsTable = new west.gui.Table();
 		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
