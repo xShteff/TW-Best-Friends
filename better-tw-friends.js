@@ -339,7 +339,12 @@ var generateSendLink = function(pid) {
 };
 var appendPlayerToTable = function(table, pid) {
 	var pLog = playerLogs[pid];
-	var logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + pLog.total + ')');
+	var totalAmount;
+	if(pLog === undefined)
+		totalAmount = 0;
+	else
+		totalAmount = pLog.total;
+	var logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + totalAmount + ')');
 	var currentText, currentDate;
 	for(var i = 0; i < playerLogs[pid].frequency.length; i++) {
 		currentText = logToolTip.attr('title');
