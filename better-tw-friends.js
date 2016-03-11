@@ -411,7 +411,7 @@ function openWindow() {
 /**
  * Forcing some custom CSS styling, mainly for the table.
  */
-var styling = $('<style></style>').text('.player-names, .send-links, .total-received { width:32% } .total-received { text-align:center; } .send-links { text-align:right; margin-right:5px; } ');
+var styling = $('<style></style>').text('.player-names, .send-links, .total-received { width:33% } .total-received { text-align:center; } .send-links { text-align:right; } ');
 $('head').append(styling);
 
 /**
