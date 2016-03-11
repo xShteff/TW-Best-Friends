@@ -376,14 +376,26 @@ var appendPlayerToTable = function(table, pid) {
 
 function openWindow() {
 	processLogs(false).then(function () {
+		var players = [];
+		$.each(friends, function(pid) {
+			players.push({ 'id' : pid, 'timeUntilReady' : timeUntilSesReady(pid) });
+		});
+		function compare(a,b) {
+		  if (a.timeUntilReady < b.timeUntilReady)
+		    return -1;
+		  else if (a.timeUntilReady > b.timeUntilReady)
+		    return 1;
+		  else 
+		    return 0;
+		}
+		players.sort(compare);
 		var windowContent = new west.gui.Scrollpane();
 		var friendsTable = new west.gui.Table();
 		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
 		friendsTable.addColumn('send-links');
 		friendsTable.addColumn('total-received');
-		$.each(friends, function(pid) {
-			appendPlayerToTable(friendsTable, pid);
-		});
+		for(var i = 0; i < players.length; i++)
+			appendPlayerToTable(friendsTable, players[i].id);
 		windowContent.appendContent(friendsTable.divMain);
 		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
 	});
