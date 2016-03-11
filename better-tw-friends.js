@@ -339,22 +339,26 @@ var generateSendLink = function(pid) {
 };
 var appendPlayerToTable = function(table, pid) {
 	var pLog = playerLogs[pid];
-	var totalAmount;
-	if(pLog === undefined)
+	var totalAmount, logToolTip, currentText, currentDate;
+	if(pLog === undefined){
 		totalAmount = 0;
-	else
-		totalAmount = pLog.total;
-	var logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + totalAmount + ')');
-	var currentText, currentDate;
-	for(var i = 0; i < playerLogs[pid].frequency.length; i++) {
-		currentText = logToolTip.attr('title');
-		currentDate = new Date(playerLogs[pid].frequency[i] * 1000);
-
-		if(i == playerLogs[pid].frequency.length - 1)
-			logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice() + '</center></div>');
-		else
-			logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice());
+		logToolTip = $('<a>').attr('title', '<div>Player did not send you any currency yet.</div>').text(' (' + totalAmount + ')');
 	}
+	else{
+		totalAmount = pLog.total;
+		logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + totalAmount + ')');
+		for(var i = 0; i < playerLogs[pid].frequency.length; i++) {
+			currentText = logToolTip.attr('title');
+			currentDate = new Date(playerLogs[pid].frequency[i] * 1000);
+
+			if(i == playerLogs[pid].frequency.length - 1)
+				logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice() + '</center></div>');
+			else
+				logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice());
+		}
+
+	}
+
 	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'total-received', logToolTip);
 	if(timeUntilSesReady(pid)) {
 		console.log('already sent');
