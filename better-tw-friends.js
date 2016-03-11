@@ -85,7 +85,7 @@ function timeUntilSesReady(friendId) {
 	if (!lastSent.hasOwnProperty(friendId)) {
 		return 0;
 	}
-	var yesterday = Date.now()/1000 - 3600*24;
+	var yesterday = Date.now()/1000 - 3600*23;
 	return Math.max(0, Math.floor(lastSent[friendId] - yesterday));
 }
 
@@ -329,16 +329,51 @@ function initialiseScript() {
 	});
 }
 
+var generateSendLink = function(pid) {
+	return $('<a></a>').text('Send').click(function() {
+		sendSesCurrency(pid)
+			.then(msg => MessageSuccess(msg).show())
+			.catch(msg => MessageError(msg).show());
+		$(this).parent().parent().remove();
+	});
+};
+var appendPlayerToTable = function(table, pid) {
+	var pLog = playerLogs[pid];
+	var logToolTip = $('<a>').attr('title', '<div><center><b>Dates you received currency from:</b> </br>').text(' (' + pLog.total + ')');
+	var currentText, currentDate;
+	for(var i = 0; i < playerLogs[pid].frequency.length; i++) {
+		currentText = logToolTip.attr('title');
+		currentDate = new Date(playerLogs[pid].frequency[i] * 1000);
+
+		if(i == playerLogs[pid].frequency.length - 1)
+			logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice() + '</center></div>');
+		else
+			logToolTip.attr('title', currentText + '<br>' + currentDate.toDateTimeStringNice());
+	}
+	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'total-received', logToolTip);
+	if(timeUntilSesReady(pid)) {
+		console.log('already sent');
+		var totalSec = timeUntilSesReady(pid);
+		var hours = parseInt( totalSec / 3600 ) % 24;
+		var minutes = parseInt( totalSec / 60 ) % 60;
+		var formattedTime = $('<a>').attr('title', '<div><b>Time remaining until you can send</b></div>').text(hours + 'h' + minutes + 'm');
+		table.appendToCell(-1, 'send-links', formattedTime);
+	} else {
+		console.log('ready');
+		table.appendToCell(-1, 'send-links', generateSendLink(pid));
+	}
+};
+
+
 function openWindow() {
 	processLogs(false).then(function () {
 		var windowContent = new west.gui.Scrollpane();
 		var friendsTable = new west.gui.Table();
 		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
 		friendsTable.addColumn('send-links');
+		friendsTable.addColumn('total-received');
 		$.each(friends, function(pid) {
-			if(!timeUntilSesReady(pid)){
-				appendPlayerToTable(friendsTable, pid);
-			}
+			appendPlayerToTable(friendsTable, pid);
 		});
 		windowContent.appendContent(friendsTable.divMain);
 		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
@@ -376,19 +411,5 @@ function initialiseButton() {
 		'id': 'twbf'
 	}).append(icon).append(fix));
 }
-
-
-var generateSendLink = function(pid) {
-	return $('<a></a>').text('Send').click(function() {
-		sendSesCurrency(pid)
-			.then(msg => MessageSuccess(msg).show())
-			.catch(msg => MessageError(msg).show());
-		$(this).parent().parent().remove();
-	});
-};
-
-var appendPlayerToTable = function(table, pid) {
-	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'send-links', generateSendLink(pid));
-};
 
 initialiseScript();
