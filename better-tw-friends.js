@@ -330,13 +330,24 @@ function initialiseScript() {
  * @returns {Anchor}
  */
 var generateSendLink = function(pid) {
-	return $('<a></a>').text('Send').click(function() {
+	return $('<a></a>').text(Game.sesData[getActiveSesKeys()[0]].friendsbar.label).click(function() {
 		sendSesCurrency(pid)
 			.then(msg => MessageSuccess(msg).show())
 			.catch(msg => MessageError(msg).show());
 		$(this).parent().parent().remove();
 	});
 };
+
+/**
+ * Building a link containing a player's name that when clicked will open it's proifle
+ * @param {Number} pid
+ * @returns {Anchor}
+ */
+var generatePlayerLink = function(pid) {
+	return $('<a></a>').text(friends[pid].name).click(function() {
+		javascript:void(PlayerProfileWindow.open(parseInt(pid))); //doesnt work without parseInt for some reason...
+	});
+}
 
 
 /**
@@ -368,7 +379,7 @@ var appendPlayerToTable = function(table, pid) {
 
 	}
 
-	table.appendRow().appendToCell(-1, 'player-names', friends[pid].name).appendToCell(-1, 'total-received', logToolTip);
+	table.appendRow().appendToCell(-1, 'player-names', generatePlayerLink(pid)).appendToCell(-1, 'total-received', logToolTip);
 	if(timeUntilSesReady(pid)) {
 		console.log('already sent');
 		var totalSec = timeUntilSesReady(pid);
@@ -401,8 +412,10 @@ function openWindow() {
 		friendsTable.addColumn('send-links').appendToCell('head', 'send-links', 'Send');
 		for(var i = 0; i < players.length; i++)
 			appendPlayerToTable(friendsTable, players[i].id);
+		var moreData = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. At eos consequatur, molestias sint suscipit consequuntur cum nisi quaerat ipsa, sapiente soluta odit voluptas eligendi ducimus nihil hic quo iste tenetur. </p>";
 		windowContent.appendContent(friendsTable.divMain);
-		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('400', '400');
+		windowContent.appendContent(moreData);
+		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
 	});
 }
 
@@ -411,7 +424,7 @@ function openWindow() {
 /**
  * Forcing some custom CSS styling, mainly for the table.
  */
-var styling = $('<style></style>').text('.player-names, .send-links, .total-received { width:33% } .total-received { text-align:center; } .send-links { text-align:right; } ');
+var styling = $('<style></style>').text('.player-names { width:40%; } .total-received { text-align:center; width:20%; } .send-links { text-align:right; width:40% }');
 $('head').append(styling);
 
 /**
