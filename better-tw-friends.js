@@ -478,7 +478,7 @@ function initialiseCounter() {
 	var evCounter = $('<div></div>').attr({
 	    'class' : 'xsht_custom_unit_counter',
 	    'id' : 'twbf',
-	    'title' : 'Keks'
+	    'title' : 'Open TW Best Friends'
 	}).css({
 	    'position' : 'absolute',
 	    'top': '32px',
@@ -489,7 +489,8 @@ function initialiseCounter() {
 	    'height' : '36px',
 	    'text-align' : 'left',
 	    'text-shadow' : '1px 1px 1px #000',
-	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 50% 0'
+	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 50% 0',
+	    'cursor' : 'pointer'
 	}).append(evValue).click(openWindow);
 	$("#ui_topbar").before(evCounter);
 }
