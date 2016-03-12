@@ -301,7 +301,7 @@ function initialiseScript() {
 		getSesReadyCount(); // display it pls Allen
 		getFriendCount(); // display it pls Allen
 		return processLogs(true)
-	}).then(initialiseButton);
+	}).then(initialiseCounter);
 
 	EventHandler.listen('friend_added', function (client) {
 		friends[client.playerId] = {
@@ -449,6 +449,53 @@ function initialiseButton() {
 		'class': 'ui_menucontainer',
 		'id': 'twbf'
 	}).append(icon).append(fix));
+}
+
+function initialiseCounter() {
+	$('.xsht_custom_unit_counter').remove()
+	var evAvailable = $('<span></span>').attr('id', 'twbf_value').text(getSesReadyCount());
+	var evLimit = $('<span></span>').attr('class', 'twbf_limit').text(' / ' + getFriendCount()).css({
+	    'color' : 'lightgray',
+	    'font-size' : '11px'
+	});
+
+	var evValue = $('<div></div>').attr('class', 'value').css({
+	    'position' :'absolute',
+	    'left' : '32px',
+	    'top' : '3px',
+	    'width' : '105px',
+	    'height' : '25px',
+	    'line-height' : '25px',
+	    'pading' : '0 5px',
+	    'color' : '#f8c57c',
+	    'font-size' : '13pt',
+	    'text-align' : 'right',
+	    'user-select' : 'none',
+	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 0 -36px',
+	    'z-index' : '1'
+	}).html(evAvailable).append(evLimit);
+
+	var evCounter = $('<div></div>').attr({
+	    'class' : 'xsht_custom_unit_counter',
+	    'id' : 'twbf',
+	    'title' : 'Keks'
+	}).css({
+	    'position' : 'absolute',
+	    'top': '32px',
+	    'left' : '50%',
+	    'margin-left' : '-250px',
+	    'z-index' :'16',
+	    'width' : '180px',
+	    'height' : '36px',
+	    'text-align' : 'left',
+	    'text-shadow' : '1px 1px 1px #000',
+	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 50% 0'
+	}).append(evValue).click(openWindow);
+	$("#ui_topbar").before(evCounter);
+}
+
+function updateCounter() {
+	WestUi.TopBar._redraw($("#twbf_value"), getSesReadyCount());
 }
 
 initialiseScript();
