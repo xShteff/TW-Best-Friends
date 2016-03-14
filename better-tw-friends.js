@@ -313,10 +313,12 @@ function initialiseScript() {
 			profession_id: client.professionId,
 			subclass: client.subClass
 		};
+		setTimeout(updateCounter, 1000);
 	});
 
 	EventHandler.listen('friend_removed', function (friendId) {
 		delete friends[friendId];
+		setTimeout(updateCounter, 1000);
 	});
 
 	EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
@@ -345,7 +347,36 @@ var generateSendLink = function(pid) {
  */
 var generatePlayerLink = function(pid) {
 	return $('<a></a>').text(friends[pid].name).click(function() {
-		javascript:void(PlayerProfileWindow.open(parseInt(pid))); //doesnt work without parseInt for some reason...
+		var selectbox = new west.gui.Selectbox();
+		selectbox.setHeader('kek').addItem(0, "kek");
+
+		//javascript:void(PlayerProfileWindow.open(parseInt(pid))); 
+	});
+}
+
+var generateDeleteFriendLink = function(pid) {
+	return $('<img>').attr({
+		'src' :'https://westens.innogamescdn.com/images/icons/delete.png',
+		'title' : '<span>Remove friend</span>',
+		'id' : 'xsht_remove_' + pid
+	}).click(function() {
+		new west.gui.Dialog("Remove friend", "Do you really want to delete this player from the list?").setIcon(west.gui.Dialog.SYS_QUESTION).addButton("yes", function() {
+            Ajax.remoteCall('character', 'cancel_friendship', {
+                friend_id: pid
+            }, function(json) {
+                if (json["result"]) {
+                    new UserMessage("Friend removed from your list.", UserMessage.TYPE_SUCCESS).show();
+                    $("div.friendData_" + pid, FriendslistWindow.DOM).remove();
+                    $('#xsht_remove_' + pid).parent().parent().remove();
+                    Chat.Friendslist.removeFriend(pid);
+                    EventHandler.signal("friend_removed", pid);
+                } else new UserMessage("Friend could not be removed", UserMessage.TYPE_ERROR).show();
+            });
+        }).addButton("no").show();
+	}).css({
+		'cursor' : 'pointer',
+		'position' : 'relative',
+		'bottom' : '1px'
 	});
 }
 
@@ -378,17 +409,14 @@ var appendPlayerToTable = function(table, pid) {
 		}
 
 	}
-
-	table.appendRow().appendToCell(-1, 'player-names', generatePlayerLink(pid)).appendToCell(-1, 'total-received', logToolTip);
+	table.appendRow().appendToCell(-1, 'remove-link', generateDeleteFriendLink(pid)).appendToCell(-1, 'player-names', generatePlayerLink(pid)).appendToCell(-1, 'total-received', logToolTip);
 	if(timeUntilSesReady(pid)) {
-		console.log('already sent');
 		var totalSec = timeUntilSesReady(pid);
 		var hours = parseInt( totalSec / 3600 ) % 24;
 		var minutes = parseInt( totalSec / 60 ) % 60;
 		var formattedTime = $('<a>').attr('title', '<div><b>Time remaining until you can send</b></div>').text(hours + 'h' + minutes + 'm');
 		table.appendToCell(-1, 'send-links', formattedTime);
 	} else {
-		console.log('ready');
 		table.appendToCell(-1, 'send-links', generateSendLink(pid));
 	}
 };
@@ -407,6 +435,7 @@ function openWindow() {
 		});
 		var windowContent = new west.gui.Scrollpane();
 		var friendsTable = new west.gui.Table();
+		friendsTable.addColumn('remove-link');
 		friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
 		friendsTable.addColumn('total-received').appendToCell('head', 'total-received', 'Received');
 		friendsTable.addColumn('send-links').appendToCell('head', 'send-links', 'Send');
@@ -424,7 +453,7 @@ function openWindow() {
 /**
  * Forcing some custom CSS styling, mainly for the table.
  */
-var styling = $('<style></style>').text('.player-names { width:40%; } .total-received { text-align:center; width:20%; } .send-links { text-align:right; width:40% }');
+var styling = $('<style></style>').text('.remove-link { width:20px; } .player-names { width:175px; } .total-received { text-align:center; width:50px; } .send-links { text-align:right; width:170px }');
 $('head').append(styling);
 
 /**
@@ -497,6 +526,7 @@ function initialiseCounter() {
 
 function updateCounter() {
 	WestUi.TopBar._redraw($("#twbf_value"), getSesReadyCount());
+	$('.twbf_limit').text(' / ' + getFriendCount());
 }
 
 initialiseScript();
