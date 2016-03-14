@@ -24,6 +24,8 @@
 // @run-at          document-end
 // ==/UserScript==
 
+var counterTimer = null;
+
 /**
  * A map of player ids to plain objects describing the character
  * @type {Object}
@@ -144,6 +146,19 @@ function getFriendsList() {
 	});
 }
 
+
+function getSesSmalestTimer() {
+	var count = 0;
+	var smallestTimer;
+	$.each(friends, function (playerId, client) {
+		if(count == 0)
+			smallestTimer = timeUntilSesReady(playerId);
+		if (timeUntilSesReady(playerId) < smallestTimer) 
+			smallestTimer = timeUntilSesReady(playerId);
+		count++;
+	});
+	return smallestTimer;
+}
 /**
  * Sends ses currency to a friend. Do NOT run before establishing an event is ongoing, even if you somehow obtain a
  * friend id without initiating the friend list first (congratulations). Returns a promise with the response message.
@@ -319,7 +334,7 @@ function initialiseScript() {
 
 	EventHandler.listen('friend_removed', function (friendId) {
 		delete friends[friendId];
-		setTimeout(updateCounter, 1000);
+		counterTimer = window.setInterval(updateCounter, 1000);
 	});
 
 	EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
@@ -425,6 +440,7 @@ var appendPlayerToTable = function(table, pid) {
  */
 function openWindow() {
 	processLogs(false).then(function () {
+		updateCounterTimer();
 		var players = [];
 		$.each(friends, function(pid) {
 			players.push({ 'id' : pid, 'timeUntilReady' : timeUntilSesReady(pid) });
@@ -443,7 +459,7 @@ function openWindow() {
 		var moreData = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. At eos consequatur, molestias sint suscipit consequuntur cum nisi quaerat ipsa, sapiente soluta odit voluptas eligendi ducimus nihil hic quo iste tenetur. </p>";
 		windowContent.appendContent(friendsTable.divMain);
 		windowContent.appendContent(moreData);
-		wman.open('twbf').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
+		wman.open('twbf noreload').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
 	});
 }
 
@@ -487,6 +503,19 @@ function initialiseCounter() {
 	    'font-size' : '11px'
 	});
 
+	var timeUntilCanSend = getSesSmalestTimer();
+	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
+	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
+	var formattedTime = $('<span></span>').css({
+		'position' : 'absolute',
+		'left' : '3px',
+		'top' : '1px',
+		'font-size' : '12px'
+	}).attr({
+		'title': '<div><b>Time remaining until you can send</b></div>',
+		'id' : 'twbf_timer'
+	}).text(hours + 'h' + minutes + 'm');
+
 	var evValue = $('<div></div>').attr('class', 'value').css({
 	    'position' :'absolute',
 	    'left' : '32px',
@@ -502,6 +531,10 @@ function initialiseCounter() {
 	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 0 -36px',
 	    'z-index' : '1'
 	}).html(evAvailable).append(evLimit);
+	if(timeUntilCanSend != 0){
+		evValue.append(formattedTime);
+		setTimeout(updateCounterTimer, 60000); //Not sure if this is alright, I'm using this to update the timer thing.
+	}
 
 	var evCounter = $('<div></div>').attr({
 	    'class' : 'xsht_custom_unit_counter',
@@ -526,6 +559,18 @@ function initialiseCounter() {
 function updateCounter() {
 	WestUi.TopBar._redraw($("#twbf_value"), getSesReadyCount());
 	$('.twbf_limit').text(' / ' + getFriendCount());
+}
+
+function updateCounterTimer() {
+	var timeUntilCanSend = getSesSmalestTimer();
+	if(timeUntilCanSend == 0) {
+		window.clearInterval(counterTimer);
+		$('#twbf_timer').text(' ');
+		return;
+	}
+	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
+	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
+	$('#twbf_timer').text(hours + 'h' + minutes + 'm');
 }
 
 initialiseScript();
