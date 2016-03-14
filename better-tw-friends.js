@@ -157,6 +157,7 @@ function sendSesCurrency(friendId) {
 				return reject(data.msg);
 			}
 			lastSent[friendId] = data.activationTime;
+			setTimeout(updateCounter, 1000);
 			return resolve(data.msg);
 		});
 	});
