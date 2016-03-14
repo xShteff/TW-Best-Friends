@@ -349,9 +349,7 @@ var generateSendLink = function(pid) {
 var generatePlayerLink = function(pid) {
 	return $('<a></a>').text(friends[pid].name).click(function() {
 		var selectbox = new west.gui.Selectbox();
-		selectbox.setHeader('kek').addItem(0, "kek");
-
-		//javascript:void(PlayerProfileWindow.open(parseInt(pid))); 
+		javascript:void(PlayerProfileWindow.open(parseInt(pid))); 
 	});
 }
 
