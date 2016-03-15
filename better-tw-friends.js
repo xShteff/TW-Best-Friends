@@ -585,7 +585,6 @@ function updateCounterTimer() {
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
 	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
 	if(timeUntilCanSend == 0) {
-		window.clearInterval(counterTimer);
 		updateCounter();
 		$('#twbf_timer').text(' ');
 		return;
