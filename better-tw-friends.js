@@ -176,7 +176,10 @@ function sendSesCurrency(friendId) {
 				return reject(data.msg);
 			}
 			lastSent[friendId] = data.activationTime;
-			setTimeout(updateCounter, 1000);
+			setTimeout(function() {
+				updateCounter();
+				updateCounterTimer();
+			}, 1000);
 			return resolve(data.msg);
 		});
 	});
@@ -459,7 +462,10 @@ function openWindow() {
 		friendsTable.addColumn('send-links').appendToCell('head', 'send-links', 'Send');
 		for(var i = 0; i < players.length; i++)
 			appendPlayerToTable(friendsTable, players[i].id);
-		var moreData = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. At eos consequatur, molestias sint suscipit consequuntur cum nisi quaerat ipsa, sapiente soluta odit voluptas eligendi ducimus nihil hic quo iste tenetur. </p>";
+		var moreData = "";
+		$.each(dropTypeLogs, function(key) {
+			moreData += '<b>' + key + ':</b> ' + dropTypeLogs[key] + '; ';
+		});
 		windowContent.appendContent(friendsTable.divMain);
 		windowContent.appendContent(moreData);
 		wman.open('twbf', 'twbf', 'noreload').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
@@ -514,6 +520,7 @@ function initialiseCounter() {
 	var timeUntilCanSend = getSesSmalestTimer();
 	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
+
 	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
 	var formattedTime = $('<span></span>').css({
 		'position' : 'absolute',
@@ -523,8 +530,7 @@ function initialiseCounter() {
 	}).attr({
 		'title': '<div><b>Time remaining until you can send</b></div>',
 		'id' : 'twbf_timer'
-	}).text(hours + 'h' + minutes + 'm');
-
+	}).text(' ');
 	var evValue = $('<div></div>').attr('class', 'value').css({
 	    'position' :'absolute',
 	    'left' : '32px',
@@ -540,8 +546,10 @@ function initialiseCounter() {
 	    'background' : 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 0 -36px',
 	    'z-index' : '1'
 	}).html(evAvailable).append(evLimit);
+	evValue.append(formattedTime);
+
 	if(timeUntilCanSend != 0){
-		evValue.append(formattedTime);
+		$('#twbf_timer').text(hours + 'h' + minutes + 'm');
 		setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
 	}
 
