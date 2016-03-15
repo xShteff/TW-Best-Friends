@@ -24,8 +24,6 @@
 // @run-at          document-end
 // ==/UserScript==
 
-var counterTimer = null;
-
 /**
  * A map of player ids to plain objects describing the character
  * @type {Object}
@@ -146,12 +144,17 @@ function getFriendsList() {
 	});
 }
 
-
+/**
+ * Returns the smallest number of seconds until you can send ses currency to a friend, or 0 if you can send it immediately.
+ * Friends list must be initiated first.
+ * @param {Number} friendId
+ * @returns {Number}
+ */
 function getSesSmalestTimer() {
 	var count = 0;
 	var smallestTimer;
 	$.each(friends, function (playerId, client) {
-		if(count == 0)
+		if(count == 0) //Don't worry about this.
 			smallestTimer = timeUntilSesReady(playerId);
 		if (timeUntilSesReady(playerId) < smallestTimer) 
 			smallestTimer = timeUntilSesReady(playerId);
@@ -159,6 +162,7 @@ function getSesSmalestTimer() {
 	});
 	return smallestTimer;
 }
+
 /**
  * Sends ses currency to a friend. Do NOT run before establishing an event is ongoing, even if you somehow obtain a
  * friend id without initiating the friend list first (congratulations). Returns a promise with the response message.
@@ -334,7 +338,7 @@ function initialiseScript() {
 
 	EventHandler.listen('friend_removed', function (friendId) {
 		delete friends[friendId];
-		counterTimer = window.setInterval(updateCounter, 1000);
+		setTimeout(updateCounter, 1000);
 	});
 
 	EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
@@ -440,7 +444,6 @@ var appendPlayerToTable = function(table, pid) {
  */
 function openWindow() {
 	processLogs(false).then(function () {
-		updateCounterTimer();
 		var players = [];
 		$.each(friends, function(pid) {
 			players.push({ 'id' : pid, 'timeUntilReady' : timeUntilSesReady(pid) });
@@ -459,7 +462,7 @@ function openWindow() {
 		var moreData = "<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. At eos consequatur, molestias sint suscipit consequuntur cum nisi quaerat ipsa, sapiente soluta odit voluptas eligendi ducimus nihil hic quo iste tenetur. </p>";
 		windowContent.appendContent(friendsTable.divMain);
 		windowContent.appendContent(moreData);
-		wman.open('twbf noreload').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
+		wman.open('twbf', 'twbf', 'noreload').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
 	});
 }
 
@@ -495,6 +498,11 @@ function initialiseButton() {
 	}).append(icon).append(fix));
 }
 
+/*
+ * Adding a custom event counter, that displays the time left until you can send ses currency,
+ * the amount of friends to whom you can send ses currency to and the total amount of friends you have.
+ * When clicked, it will open a the script window.
+ */
 function initialiseCounter() {
 	$('.xsht_custom_unit_counter').remove()
 	var evAvailable = $('<span></span>').attr('id', 'twbf_value').text(getSesReadyCount());
@@ -506,6 +514,7 @@ function initialiseCounter() {
 	var timeUntilCanSend = getSesSmalestTimer();
 	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
+	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
 	var formattedTime = $('<span></span>').css({
 		'position' : 'absolute',
 		'left' : '3px',
@@ -533,7 +542,7 @@ function initialiseCounter() {
 	}).html(evAvailable).append(evLimit);
 	if(timeUntilCanSend != 0){
 		evValue.append(formattedTime);
-		setTimeout(updateCounterTimer, 60000); //Not sure if this is alright, I'm using this to update the timer thing.
+		setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
 	}
 
 	var evCounter = $('<div></div>').attr({
@@ -556,21 +565,35 @@ function initialiseCounter() {
 	$("#ui_topbar").before(evCounter);
 }
 
+/*
+ * Updates the amount of players to whom I can send ses currency to,
+ * and the total amount of friends.
+ */
 function updateCounter() {
 	WestUi.TopBar._redraw($("#twbf_value"), getSesReadyCount());
 	$('.twbf_limit').text(' / ' + getFriendCount());
 }
 
+/*
+ * Recursevly updating the timer on the counter. At the same time I'm checking if time reached 0.
+ * If it did, then I'm stoping and removing the timer, and updating the counter
+ * If it didn't, I'm just displaying the remaining time.
+ */
 function updateCounterTimer() {
 	var timeUntilCanSend = getSesSmalestTimer();
-	if(timeUntilCanSend == 0) {
-		window.clearInterval(counterTimer);
-		$('#twbf_timer').text(' ');
-		return;
-	}
 	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
-	$('#twbf_timer').text(hours + 'h' + minutes + 'm');
+	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
+	if(timeUntilCanSend == 0) {
+		window.clearInterval(counterTimer);
+		updateCounter();
+		$('#twbf_timer').text(' ');
+		return;
+	} else {
+		$('#twbf_timer').text(hours + 'h' + minutes + 'm');
+		setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
+	}
+	
 }
 
 initialiseScript();
