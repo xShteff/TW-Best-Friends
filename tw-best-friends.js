@@ -21,8 +21,15 @@
 // @match           https://*.the-west.fr/game.php*
 // @match           https://*.the-west.it/game.php*
 // @grant           none
+// @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
+// @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
+// @version         1.01
 // @run-at          document-end
 // ==/UserScript==
+
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.textContent = '(' + (function () {
 
 /**
  * A map of player ids to plain objects describing the character
@@ -320,6 +327,7 @@ function initialiseScript() {
 	var sesKeys = getActiveSesKeys();
 	if (sesKeys.length === 0) return;
 
+	registerToWestApi();
 	getFriendsList().then(function () {
 		getSesReadyCount(); // display it pls Allen
 		getFriendCount(); // display it pls Allen
@@ -604,3 +612,20 @@ function updateCounterTimer() {
 }
 
 initialiseScript();
+
+function registerToWestApi() {
+	scriptInfo = "What are you doing here?";
+	window.scriptyscript = {
+		script: TheWestApi.register('twbf', 'The West Best Friends', '2', Game.version.toString(), 'xShteff, Diggo11', 'https://xshteff.github.io'),
+		setGui: function() {
+			this.script.setGui(scriptInfo);
+		},
+		init: function() {
+			this.setGui();
+		}
+	};
+	window.scriptyscript.init();
+}
+
+}).toString() + ')()';
+document.head.appendChild(script);
