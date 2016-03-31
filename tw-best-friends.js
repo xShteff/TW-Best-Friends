@@ -27,6 +27,8 @@
 // @run-at          document-end
 // ==/UserScript==
 
+// http://www.danstools.com/javascript-minify/
+
 var script = document.createElement('script');
 script.type = 'text/javascript';
 script.textContent = '(' + (function () {
@@ -154,12 +156,11 @@ function getFriendsList() {
 /**
  * Returns the smallest number of seconds until you can send ses currency to a friend, or 0 if you can send it immediately.
  * Friends list must be initiated first.
- * @param {Number} friendId
  * @returns {Number}
  */
-function getSesSmalestTimer() {
+function getSesSmallestTimer() {
 	var count = 0;
-	var smallestTimer;
+	var smallestTimer = 0;
 	$.each(friends, function (playerId, client) {
 		if(count == 0) //Don't worry about this.
 			smallestTimer = timeUntilSesReady(playerId);
@@ -360,7 +361,7 @@ function initialiseScript() {
 /**
  * Building a send currency link by using a player id
  * @param {Number} pid
- * @returns {Anchor}
+ * @returns {HTMLAnchorElement}
  */
 var generateSendLink = function(pid) {
 	return $('<a></a>').text(Game.sesData[getActiveSesKeys()[0]].friendsbar.label).click(function() {
@@ -374,14 +375,13 @@ var generateSendLink = function(pid) {
 /**
  * Building a link containing a player's name that when clicked will open it's proifle
  * @param {Number} pid
- * @returns {Anchor}
+ * @returns {HTMLAnchorElement}
  */
 var generatePlayerLink = function(pid) {
 	return $('<a></a>').text(friends[pid].name).click(function() {
-		var selectbox = new west.gui.Selectbox();
-		javascript:void(PlayerProfileWindow.open(parseInt(pid))); 
+		void(PlayerProfileWindow.open(parseInt(pid)));
 	});
-}
+};
 
 var generateDeleteFriendLink = function(pid) {
 	return $('<img>').attr({
@@ -407,7 +407,7 @@ var generateDeleteFriendLink = function(pid) {
 		'position' : 'relative',
 		'bottom' : '1px'
 	});
-}
+};
 
 
 /**
@@ -443,7 +443,7 @@ var appendPlayerToTable = function(table, pid) {
 		var totalSec = timeUntilSesReady(pid);
 		var hours = parseInt( totalSec / 3600 ) % 24;
 		var minutes = parseInt( totalSec / 60 ) % 60;
-		var formattedTime = $('<a>').attr('title', '<div><b>Time remaining until you can send</b></div>').text(hours + 'h' + minutes + 'm');
+		var formattedTime = $('<a>').attr('title', '<div><b>Time remaining until you can send</b></div>').text(s('%1h %2m', hours, minutes));
 		table.appendToCell(-1, 'send-links', formattedTime);
 	} else {
 		table.appendToCell(-1, 'send-links', generateSendLink(pid));
@@ -489,47 +489,22 @@ var styling = $('<style></style>').text('.remove-link { width:20px; } .player-na
 $('head').append(styling);
 
 /**
- * Adds a temporary button in game so you can open the window.
- */
-function initialiseButton() {
-	var icon = $('<div></div>').attr({
-		'title': 'TW Best Friends',
-		'class': 'menulink'
-	}).css({
-		'background': 'url(https://puu.sh/nkN3l/aba1b474e5.png)',
-		'background-position': '0px 0px'
-	}).mouseleave(function () {
-		$(this).css("background-position", "0px 0px");
-	}).mouseenter(function (e) {
-		$(this).css("background-position", "25px 0px");
-	}).click(openWindow);
-	var fix = $('<div></div>').attr({
-		'class': 'menucontainer_bottom'
-	});
-	$("#ui_menubar .ui_menucontainer :last").after($('<div></div>').attr({
-		'class': 'ui_menucontainer',
-		'id': 'twbf'
-	}).append(icon).append(fix));
-}
-
-/*
  * Adding a custom event counter, that displays the time left until you can send ses currency,
  * the amount of friends to whom you can send ses currency to and the total amount of friends you have.
  * When clicked, it will open a the script window.
  */
 function initialiseCounter() {
-	$('.xsht_custom_unit_counter').remove()
+	$('.xsht_custom_unit_counter').remove();
 	var evAvailable = $('<span></span>').attr('id', 'twbf_value').text(getSesReadyCount());
 	var evLimit = $('<span></span>').attr('class', 'twbf_limit').text(' / ' + getFriendCount()).css({
 	    'color' : 'lightgray',
 	    'font-size' : '11px'
 	});
 
-	var timeUntilCanSend = getSesSmalestTimer();
+	var timeUntilCanSend = getSesSmallestTimer();
 	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
 
-	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
 	var formattedTime = $('<span></span>').css({
 		'position' : 'absolute',
 		'left' : '3px',
@@ -557,7 +532,7 @@ function initialiseCounter() {
 	evValue.append(formattedTime);
 
 	if(timeUntilCanSend != 0){
-		$('#twbf_timer').text(hours + 'h' + minutes + 'm');
+		$('#twbf_timer').text(s('%1h %2m', hours, minutes));
 		setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
 	}
 
@@ -596,19 +571,16 @@ function updateCounter() {
  * If it didn't, I'm just displaying the remaining time.
  */
 function updateCounterTimer() {
-	var timeUntilCanSend = getSesSmalestTimer();
+	var timeUntilCanSend = getSesSmallestTimer();
 	var hours = parseInt( timeUntilCanSend / 3600 ) % 24;
 	var minutes = parseInt( timeUntilCanSend / 60 ) % 60;
-	console.log(timeUntilCanSend + '; ' + hours + 'h' + minutes + 'm' + '; ' + (timeUntilCanSend % 60 + 1) * 1000);
 	if(timeUntilCanSend == 0) {
 		updateCounter();
 		$('#twbf_timer').text(' ');
-		return;
 	} else {
-		$('#twbf_timer').text(hours + 'h' + minutes + 'm');
+		$('#twbf_timer').text(s('%1h %2m', hours, minutes));
 		setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
 	}
-	
 }
 
 initialiseScript();
