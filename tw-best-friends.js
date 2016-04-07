@@ -23,7 +23,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.02
+// @version         1.03
 // @run-at          document-end
 // ==/UserScript==
 
