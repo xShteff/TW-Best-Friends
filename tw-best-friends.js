@@ -518,7 +518,7 @@ script.textContent = '(' + (function() {
                 appendPlayerToTable(friendsTable, players[i].id);
             var moreData = "";
             $.each(dropTypeLogs, function(key) {
-                moreData += '<b>' + prettyDropTypes(key) + ':</b> ' + dropTypeLogs[key] + '; ';
+                moreData += '<b>' + prettyDropTypes(key) + ':</b> ' + dropTypeLogs[key] + ', ';
             });
             windowContent.appendContent(friendsTable.divMain);
             windowContent.appendContent(moreData);
