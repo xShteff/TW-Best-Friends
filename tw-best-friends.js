@@ -23,7 +23,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.03
+// @version         1.04
 // @run-at          document-end
 // ==/UserScript==
 
@@ -230,6 +230,8 @@ script.textContent = '(' + (function() {
 
         loadLogs();
         var sesKey = getActiveSesKeys()[0];
+        if (typeof(logsMetadata.logTypes) == 'undefined')
+            logsMetadata.logTypes = {};
         if (sesKey !== logsMetadata.sesKey) {
             playerLogs = {};
             dropTypeLogs = {};
@@ -316,6 +318,10 @@ script.textContent = '(' + (function() {
                     entry.value *= -1;
                 }
                 dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + +entry.value;
+
+                if (typeof(logsMetadata.logTypes[entry.type]) == 'undefined') {
+                    logsMetadata.logTypes[entry.type] = entry.description;
+                }
                 if (entry.type === 'friendDrop') {
                     var senderId = JSON.parse(entry.details).player_id;
                     if (playerLogs.hasOwnProperty(senderId)) {
@@ -490,7 +496,7 @@ script.textContent = '(' + (function() {
      * @returns {String}
      */
     function prettyDropTypes(key) {
-        return logTypes[key] || "Other";
+        return logsMetadata.logTypes[key] || logTypes[key] || "Unknown";
     }
 
     /**
