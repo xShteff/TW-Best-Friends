@@ -640,7 +640,7 @@ script.textContent = '(' + (function() {
     function registerToWestApi() {
         scriptInfo = "What are you doing here?";
         window.scriptyscript = {
-            script: TheWestApi.register('twbf', 'The West Best Friends', '2', Game.version.toString(), 'xShteff, Diggo11', 'https://xshteff.github.io'),
+            script: TheWestApi.register('twbf', 'The West Best Friends', '2', Game.version.toString(), 'xShteff, Diggo11, Leones/Slygoxx', 'https://xshteff.github.io'),
             setGui: function() {
                 this.script.setGui(scriptInfo);
             },
