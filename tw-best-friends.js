@@ -23,7 +23,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.05
+// @version         1.06
 // @run-at          document-end
 // ==/UserScript==
 
@@ -92,7 +92,7 @@ script.textContent = '(' + (function () {
      */
     var logsLocked = false;
 
-    var sortingDirection = "Up";
+    var sortingIsAscent = true;
     /**
      * Returns a list of keys for active events, eg Hearts. Practically guaranteed to have a length of 0 if no events are
      * running and a length of 1 otherwise (2 or more = internal beta only).
@@ -523,44 +523,27 @@ script.textContent = '(' + (function () {
                     });
                 }
             });
-            //Sortwinninghand-esque, pls no killerinio
             players.sort(function (a, b) {
-                switch (sortingType) {
-                    case "totalUp":
-                        return b.total - a.total;
-                        break;
-                    case "totalDown":
-                        return a.total - b.total;
-                        break;
-                    case "receivedUp":
-                        return a.timeUntilReady - b.timeUntilReady;
-                        break;
-                    case "receivedDown":
-                        return b.timeUntilReady - a.timeUntilReady;
-                        break;
-                    case "nameUp":
-                        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
-                        break;
-                    case "nameDown":
-                        return (a.name.toLowerCase() < b.name.toLowerCase()) ? 1 : -1;
-                        break;
-                }
+                if (sortingType !== "name")
+                    return (sortingIsAscent) ? b[sortingType] - a[sortingType] : a[sortingType] - b[sortingType];
+                else
+                    return (sortingIsAscent) ? ((a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1) : ((a.name.toLowerCase() < b.name.toLowerCase()) ? 1 : -1);
             });
             var friendsTable = new west.gui.Table();
             friendsTable.addColumn('remove-link').setId('twbf-table');
             var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
-                refreshTable("name" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("name");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('player-names').appendToCell('head', 'player-names', nameColHead);
             var receivedColHead = $("<a>").text('Received').click(function () {
-                refreshTable("total" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("total");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('total-received').appendToCell('head', 'total-received', receivedColHead);
             var sendColHead = $("<a>").text('Send').click(function () {
-                refreshTable("received" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("timeUntilReady");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('send-links').appendToCell('head', 'send-links', sendColHead);
             for (var i = 0; i < players.length; i++)
@@ -603,18 +586,18 @@ script.textContent = '(' + (function () {
             var friendsTable = new west.gui.Table();
             friendsTable.addColumn('remove-link').setId('twbf-table');
             var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
-                refreshTable("name" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("name");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('player-names').appendToCell('head', 'player-names', nameColHead);
             var receivedColHead = $("<a>").text('Received').click(function () {
-                refreshTable("total" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("total");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('total-received').appendToCell('head', 'total-received', receivedColHead);
             var sendColHead = $("<a>").text('Send').click(function () {
-                refreshTable("received" + sortingDirection);
-                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+                refreshTable("timeUntilReady");
+                sortingIsAscent = !sortingIsAscent;
             });
             friendsTable.addColumn('send-links').appendToCell('head', 'send-links', sendColHead);
             for (var i = 0; i < players.length; i++)
