@@ -23,15 +23,14 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.04
+// @version         1.05
 // @run-at          document-end
 // ==/UserScript==
 
 // http://www.danstools.com/javascript-minify/
-
 var script = document.createElement('script');
 script.type = 'text/javascript';
-script.textContent = '(' + (function() {
+script.textContent = '(' + (function () {
 
     /**
      * A map of player ids to plain objects describing the character
@@ -93,6 +92,7 @@ script.textContent = '(' + (function() {
      */
     var logsLocked = false;
 
+    var sortingDirection = "Up";
     /**
      * Returns a list of keys for active events, eg Hearts. Practically guaranteed to have a length of 0 if no events are
      * running and a length of 1 otherwise (2 or more = internal beta only).
@@ -122,7 +122,7 @@ script.textContent = '(' + (function() {
      */
     function getSesReadyCount() {
         var count = 0;
-        $.each(friends, function(playerId, client) {
+        $.each(friends, function (playerId, client) {
             if (timeUntilSesReady(playerId) === 0) {
                 count++;
             }
@@ -144,15 +144,15 @@ script.textContent = '(' + (function() {
      * @returns {Promise}
      */
     function getFriendsList() {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             Ajax.remoteCallMode('friendsbar', 'search', {
                 search_type: 'friends'
-            }, function(data) {
+            }, function (data) {
                 if (data.error) {
                     return reject(data.msg);
                 }
 
-                $.each(data.players, function(i, client) {
+                $.each(data.players, function (i, client) {
                     if (client.player_id !== Character.playerId) {
                         friends[client.player_id] = west.storage.FriendsBar.prototype.normalizeAvatars_(client, i);
                         delete friends[client.player_id].experience;
@@ -162,7 +162,7 @@ script.textContent = '(' + (function() {
                 });
 
                 var sesKey = getActiveSesKeys()[0];
-                $.each(data.eventActivations, function(i, eventActivation) {
+                $.each(data.eventActivations, function (i, eventActivation) {
                     if (eventActivation.event_name === sesKey) {
                         lastSent[eventActivation.friend_id] = eventActivation.activation_time;
                     }
@@ -181,7 +181,7 @@ script.textContent = '(' + (function() {
     function getSesSmallestTimer() {
         var count = 0;
         var smallestTimer = 0;
-        $.each(friends, function(playerId, client) {
+        $.each(friends, function (playerId, client) {
             if (count == 0) //Don't worry about this.
                 smallestTimer = timeUntilSesReady(playerId);
             if (timeUntilSesReady(playerId) < smallestTimer)
@@ -198,16 +198,16 @@ script.textContent = '(' + (function() {
      * @returns {Promise}
      */
     function sendSesCurrency(friendId) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             Ajax.remoteCall('friendsbar', 'event', {
                 player_id: friendId,
                 event: getActiveSesKeys()[0]
-            }, function(data) {
+            }, function (data) {
                 if (data.error) {
                     return reject(data.msg);
                 }
                 lastSent[friendId] = data.activationTime;
-                setTimeout(function() {
+                setTimeout(function () {
                     updateCounter();
                     updateCounterTimer();
                 }, 1000);
@@ -230,7 +230,7 @@ script.textContent = '(' + (function() {
 
         loadLogs();
         var sesKey = getActiveSesKeys()[0];
-        if (typeof(logsMetadata.logTypes) == 'undefined')
+        if (typeof (logsMetadata.logTypes) == 'undefined')
             logsMetadata.logTypes = {};
         if (sesKey !== logsMetadata.sesKey) {
             playerLogs = {};
@@ -238,7 +238,7 @@ script.textContent = '(' + (function() {
             logsMetadata.sesKey = sesKey;
         }
 
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var generator = processLogsBatches(sesKey, background, resolve, reject);
             generator.next();
             generator.next(() => generator.next());
@@ -270,7 +270,7 @@ script.textContent = '(' + (function() {
      * @param {Function} resolve
      * @param {Function} reject
      */
-    function * processLogsBatches(sesKey, background, resolve, reject) {
+    function* processLogsBatches(sesKey, background, resolve, reject) {
         var callback = yield;
         var stats = {
             newest: logsMetadata.newestSeen || 0,
@@ -301,13 +301,13 @@ script.textContent = '(' + (function() {
             ses_id: sesKey,
             page: page,
             limit: 100
-        }, function(data) {
+        }, function (data) {
             if (data.error) {
                 logsLocked = false;
                 return reject(data.msg);
             }
 
-            stats.hasNext = !data.entries.some(function(entry, i) {
+            stats.hasNext = !data.entries.some(function (entry, i) {
                 if (entry.date <= logsMetadata.newestSeen) {
                     return true; // short circuit
                 } else if (i === 0 && entry.date > stats.newest) {
@@ -319,7 +319,7 @@ script.textContent = '(' + (function() {
                 }
                 dropTypeLogs[entry.type] = (dropTypeLogs[entry.type] || 0) + +entry.value;
 
-                if (typeof(logsMetadata.logTypes[entry.type]) == 'undefined') {
+                if (typeof (logsMetadata.logTypes[entry.type]) == 'undefined') {
                     logsMetadata.logTypes[entry.type] = entry.description;
                 }
                 if (entry.type === 'friendDrop') {
@@ -371,13 +371,13 @@ script.textContent = '(' + (function() {
         if (sesKeys.length === 0) return;
 
         registerToWestApi();
-        getFriendsList().then(function() {
+        getFriendsList().then(function () {
             getSesReadyCount(); // display it pls Allen
             getFriendCount(); // display it pls Allen
             return processLogs(true)
         }).then(initialiseCounter);
 
-        EventHandler.listen('friend_added', function(client) {
+        EventHandler.listen('friend_added', function (client) {
             friends[client.playerId] = {
                 avatar: client.avatar,
                 class: client.charClass,
@@ -390,12 +390,12 @@ script.textContent = '(' + (function() {
             setTimeout(updateCounter, 1000);
         });
 
-        EventHandler.listen('friend_removed', function(friendId) {
+        EventHandler.listen('friend_removed', function (friendId) {
             delete friends[friendId];
             setTimeout(updateCounter, 1000);
         });
 
-        EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function(amount) {
+        EventHandler.listen(Game.sesData[sesKeys[0]].counter.key, function (amount) {
             newLogs = true;
         });
     }
@@ -405,8 +405,8 @@ script.textContent = '(' + (function() {
      * @param {Number} pid
      * @returns {HTMLAnchorElement}
      */
-    var generateSendLink = function(pid) {
-        return $('<a></a>').text(Game.sesData[getActiveSesKeys()[0]].friendsbar.label).click(function() {
+    var generateSendLink = function (pid) {
+        return $('<a></a>').text(Game.sesData[getActiveSesKeys()[0]].friendsbar.label).click(function () {
             sendSesCurrency(pid)
                 .then(msg => MessageSuccess(msg).show())
                 .catch(msg => MessageError(msg).show());
@@ -419,22 +419,22 @@ script.textContent = '(' + (function() {
      * @param {Number} pid
      * @returns {HTMLAnchorElement}
      */
-    var generatePlayerLink = function(pid) {
-        return $('<a></a>').text(friends[pid].name).click(function() {
-            void(PlayerProfileWindow.open(parseInt(pid)));
+    var generatePlayerLink = function (pid) {
+        return $('<a></a>').text(friends[pid].name).click(function () {
+            void (PlayerProfileWindow.open(parseInt(pid)));
         });
     };
 
-    var generateDeleteFriendLink = function(pid) {
+    var generateDeleteFriendLink = function (pid) {
         return $('<img>').attr({
             'src': 'https://westens.innogamescdn.com/images/icons/delete.png',
             'title': '<span>Remove friend</span>',
             'id': 'xsht_remove_' + pid
-        }).click(function() {
-            new west.gui.Dialog("Remove friend", "Do you really want to delete this player from the list?").setIcon(west.gui.Dialog.SYS_QUESTION).addButton("yes", function() {
+        }).click(function () {
+            new west.gui.Dialog("Remove friend", "Do you really want to delete this player from the list?").setIcon(west.gui.Dialog.SYS_QUESTION).addButton("yes", function () {
                 Ajax.remoteCall('character', 'cancel_friendship', {
                     friend_id: pid
-                }, function(json) {
+                }, function (json) {
                     if (json["result"]) {
                         new UserMessage("Friend removed from your list.", UserMessage.TYPE_SUCCESS).show();
                         $("div.friendData_" + pid, FriendslistWindow.DOM).remove();
@@ -459,7 +459,7 @@ script.textContent = '(' + (function() {
      * @param {west.gui.Table} table
      * @param {Number} pid
      */
-    var appendPlayerToTable = function(table, pid) {
+    var appendPlayerToTable = function (table, pid) {
         var pLog = playerLogs[pid];
         var totalAmount, logToolTip, currentText, currentDate;
         if (pLog === undefined) {
@@ -499,31 +499,128 @@ script.textContent = '(' + (function() {
         return logsMetadata.logTypes[key] || logTypes[key] || "Unknown";
     }
 
+    /*
+    * Uhm. Using this to sort the table. It requires a key which decides how exactly you sort it.
+    * @param {String} sortingType
+    */
+    var refreshTable = function (sortingType) {
+        processLogs(false).then(function () {
+            var players = [];
+            $.each(friends, function (pid) {
+                try {
+                    players.push({
+                        'id': pid,
+                        'name': friends[pid].name,
+                        'total': playerLogs[pid].total,
+                        'timeUntilReady': timeUntilSesReady(pid)
+                    });
+                } catch (e) {
+                    players.push({
+                        'id': pid,
+                        'name': friends[pid].name,
+                        'total': 0,
+                        'timeUntilReady': timeUntilSesReady(pid)
+                    });
+                }
+            });
+            //Sortwinninghand-esque, pls no killerinio
+            players.sort(function (a, b) {
+                switch (sortingType) {
+                    case "totalUp":
+                        return b.total - a.total;
+                        break;
+                    case "totalDown":
+                        return a.total - b.total;
+                        break;
+                    case "receivedUp":
+                        return a.timeUntilReady - b.timeUntilReady;
+                        break;
+                    case "receivedDown":
+                        return b.timeUntilReady - a.timeUntilReady;
+                        break;
+                    case "nameUp":
+                        return (a.name.toLowerCase() > b.name.toLowerCase()) ? 1 : -1;
+                        break;
+                    case "nameDown":
+                        return (a.name.toLowerCase() < b.name.toLowerCase()) ? 1 : -1;
+                        break;
+                }
+            });
+            var friendsTable = new west.gui.Table();
+            friendsTable.addColumn('remove-link').setId('twbf-table');
+            var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
+                refreshTable("name" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('player-names').appendToCell('head', 'player-names', nameColHead);
+            var receivedColHead = $("<a>").text('Received').click(function () {
+                refreshTable("total" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('total-received').appendToCell('head', 'total-received', receivedColHead);
+            var sendColHead = $("<a>").text('Send').click(function () {
+                refreshTable("received" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('send-links').appendToCell('head', 'send-links', sendColHead);
+            for (var i = 0; i < players.length; i++)
+                appendPlayerToTable(friendsTable, players[i].id);
+            var moreData = "";
+            $.each(dropTypeLogs, function (key) {
+                moreData += '<b>' + prettyDropTypes(key) + ':</b> ' + dropTypeLogs[key] + ', ';
+            });
+            $('#twbf-table').html(friendsTable.divMain);
+        });
+    }
+
     /**
      * Generating the GUI and displaying all the necessary information for the user.
      */
     function openWindow() {
-        processLogs(false).then(function() {
+        processLogs(false).then(function () {
             var players = [];
-            $.each(friends, function(pid) {
-                players.push({
-                    'id': pid,
-                    'timeUntilReady': timeUntilSesReady(pid)
-                });
+            $.each(friends, function (pid) {
+                try {
+                    players.push({
+                        'id': pid,
+                        'name': friends[pid].name,
+                        'total': playerLogs[pid].total,
+                        'timeUntilReady': timeUntilSesReady(pid)
+                    });
+                } catch (e) {
+                    players.push({
+                        'id': pid,
+                        'name': friends[pid].name,
+                        'total': 0,
+                        'timeUntilReady': timeUntilSesReady(pid)
+                    });
+                }
             });
-            players.sort(function(a, b) {
+            players.sort(function (a, b) {
                 return a.timeUntilReady - b.timeUntilReady;
             });
             var windowContent = new west.gui.Scrollpane();
             var friendsTable = new west.gui.Table();
-            friendsTable.addColumn('remove-link');
-            friendsTable.addColumn('player-names').appendToCell('head', 'player-names', '<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name');
-            friendsTable.addColumn('total-received').appendToCell('head', 'total-received', 'Received');
-            friendsTable.addColumn('send-links').appendToCell('head', 'send-links', 'Send');
+            friendsTable.addColumn('remove-link').setId('twbf-table');
+            var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
+                refreshTable("name" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('player-names').appendToCell('head', 'player-names', nameColHead);
+            var receivedColHead = $("<a>").text('Received').click(function () {
+                refreshTable("total" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('total-received').appendToCell('head', 'total-received', receivedColHead);
+            var sendColHead = $("<a>").text('Send').click(function () {
+                refreshTable("received" + sortingDirection);
+                (sortingDirection === "Up") ? sortingDirection = "Down" : sortingDirection = "Up";
+            });
+            friendsTable.addColumn('send-links').appendToCell('head', 'send-links', sendColHead);
             for (var i = 0; i < players.length; i++)
                 appendPlayerToTable(friendsTable, players[i].id);
             var moreData = "";
-            $.each(dropTypeLogs, function(key) {
+            $.each(dropTypeLogs, function (key) {
                 moreData += '<b>' + prettyDropTypes(key) + ':</b> ' + dropTypeLogs[key] + ', ';
             });
             windowContent.appendContent(friendsTable.divMain);
@@ -531,7 +628,6 @@ script.textContent = '(' + (function() {
             wman.open('twbf', 'twbf', 'noreload').setTitle('TW Best Friends').appendToContentPane(windowContent.divMain).setMiniTitle('TW Best Friends - Sending currency made easier!').setSize('500', '420');
         });
     }
-
 
 
     /**
@@ -609,19 +705,19 @@ script.textContent = '(' + (function() {
     }
 
     /*
-     * Updates the amount of players to whom I can send ses currency to,
-     * and the total amount of friends.
-     */
+    * Updates the amount of players to whom I can send ses currency to,
+    * and the total amount of friends.
+    */
     function updateCounter() {
         WestUi.TopBar._redraw($("#twbf_value"), getSesReadyCount());
         $('.twbf_limit').text(' / ' + getFriendCount());
     }
 
     /*
-     * Recursevly updating the timer on the counter. At the same time I'm checking if time reached 0.
-     * If it did, then I'm stoping and removing the timer, and updating the counter
-     * If it didn't, I'm just displaying the remaining time.
-     */
+    * Recursevly updating the timer on the counter. At the same time I'm checking if time reached 0.
+    * If it did, then I'm stoping and removing the timer, and updating the counter
+    * If it didn't, I'm just displaying the remaining time.
+    */
     function updateCounterTimer() {
         var timeUntilCanSend = getSesSmallestTimer();
         var hours = parseInt(timeUntilCanSend / 3600) % 24;
@@ -640,11 +736,11 @@ script.textContent = '(' + (function() {
     function registerToWestApi() {
         scriptInfo = "What are you doing here?";
         window.scriptyscript = {
-            script: TheWestApi.register('twbf', 'The West Best Friends', '2', Game.version.toString(), 'xShteff, Diggo11, Leones/Slygoxx', 'https://xshteff.github.io'),
-            setGui: function() {
+            script: TheWestApi.register('twbf', 'The West Best Friends', '2', Game.version.toString(), 'xShteff, Diggo11, Leones/Slygoxx', 'https://github.com/xShteff'),
+            setGui: function () {
                 this.script.setGui(scriptInfo);
             },
-            init: function() {
+            init: function () {
                 this.setGui();
             }
         };
