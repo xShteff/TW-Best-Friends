@@ -23,7 +23,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.06
+// @version         1.07
 // @run-at          document-end
 // ==/UserScript==
 
@@ -43,6 +43,13 @@ script.textContent = '(' + (function () {
      * @type {Object}
      */
     var lastSent = {};
+
+    /**
+     * Unix timestamp representing when ses currency can next be sent to any friend. This is a cache to minimise looping
+     * over the lastSent map.
+     * @type {Number}
+     */
+    var canNextSend = null;
 
     /**
      * A map of logtypes to some more descriptive names
@@ -179,6 +186,9 @@ script.textContent = '(' + (function () {
      * @returns {Number}
      */
     function getSesSmallestTimer() {
+        if (canNextSend != null)
+            return Math.max(0, Math.floor(canNextSend - Date.now() / 1000));
+
         var count = 0;
         var smallestTimer = 0;
         $.each(friends, function (playerId, client) {
@@ -188,6 +198,7 @@ script.textContent = '(' + (function () {
                 smallestTimer = timeUntilSesReady(playerId);
             count++;
         });
+        canNextSend = Date.now() / 1000 + smallestTimer;
         return smallestTimer;
     }
 
@@ -207,6 +218,7 @@ script.textContent = '(' + (function () {
                     return reject(data.msg);
                 }
                 lastSent[friendId] = data.activationTime;
+                canNextSend = null;
                 setTimeout(function () {
                     updateCounter();
                     updateCounterTimer();
@@ -392,6 +404,7 @@ script.textContent = '(' + (function () {
 
         EventHandler.listen('friend_removed', function (friendId) {
             delete friends[friendId];
+            canNextSend = null;
             setTimeout(updateCounter, 1000);
         });
 
@@ -663,7 +676,7 @@ script.textContent = '(' + (function () {
         evValue.append(formattedTime);
 
         if (timeUntilCanSend != 0) {
-            $('#twbf_timer').text(s('%1h %2m', hours, minutes));
+            formattedTime.text(s('%1h %2m', hours, minutes));
             setTimeout(updateCounterTimer, (timeUntilCanSend % 60 + 1) * 1000); //Not sure if this is alright, I'm using this to update the timer thing.
         }
 
