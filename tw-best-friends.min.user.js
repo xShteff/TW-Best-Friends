@@ -21,8 +21,8 @@
 // @match           https://*.the-west.fr/game.php*
 // @match           https://*.the-west.it/game.php*
 // @grant           none
-// @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
-// @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
+// @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
+// @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
 // @version         1.08
 // @run-at          document-end
 // ==/UserScript==
