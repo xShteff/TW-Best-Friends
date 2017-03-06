@@ -23,7 +23,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/userscripts/twbf.user.js
 // @updateURL       https://xshteff.github.io/userscripts/twbf.user.js
-// @version         1.07
+// @version         1.08
 // @run-at          document-end
 // ==/UserScript==
 
@@ -399,6 +399,7 @@ script.textContent = '(' + (function () {
                 profession_id: client.professionId,
                 subclass: client.subClass
             };
+            canNextSend = null;
             setTimeout(updateCounter, 1000);
         });
 
