@@ -20,6 +20,7 @@
 // @match           https://*.the-west.sk/game.php*
 // @match           https://*.the-west.fr/game.php*
 // @match           https://*.the-west.it/game.php*
+// @exclude         https://classic.the-west.net/game.php*
 // @grant           none
 // @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
 // @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
