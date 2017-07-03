@@ -24,7 +24,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
 // @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
-// @version         1.08
+// @version         1.09
 // @run-at          document-end
 // ==/UserScript==
 
