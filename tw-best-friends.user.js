@@ -24,7 +24,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
 // @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
-// @version         1.09
+// @version         1.10
 // @run-at          document-end
 // ==/UserScript==
 
@@ -546,7 +546,7 @@ script.textContent = '(' + (function () {
             });
             var friendsTable = new west.gui.Table();
             friendsTable.addColumn('remove-link').setId('twbf-table');
-            var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
+            var nameColHead = $("<a>").html('<img src="' + to_cdn('images/icons/user.png') + '" alt="" />&nbsp;Name').click(function () {
                 refreshTable("name");
                 sortingIsAscent = !sortingIsAscent;
             });
@@ -600,7 +600,7 @@ script.textContent = '(' + (function () {
             var windowContent = new west.gui.Scrollpane();
             var friendsTable = new west.gui.Table();
             friendsTable.addColumn('remove-link').setId('twbf-table');
-            var nameColHead = $("<a>").html('<img src="//westzzs.innogamescdn.com/images/icons/user.png" alt="" />&nbsp;' + 'Name').click(function () {
+            var nameColHead = $("<a>").html('<img src="' + to_cdn('images/icons/user.png') + '" alt="" />&nbsp;Name').click(function () {
                 refreshTable("name");
                 sortingIsAscent = !sortingIsAscent;
             });
@@ -672,7 +672,7 @@ script.textContent = '(' + (function () {
             'font-size': '13pt',
             'text-align': 'right',
             'user-select': 'none',
-            'background': 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 0 -36px',
+            'background': 'url("' + to_cdn('images/interface/custom_unit_counter_sprite.png?2') + '") no-repeat 0 -36px',
             'z-index': '1'
         }).html(evAvailable).append(evLimit);
         evValue.append(formattedTime);
@@ -696,7 +696,7 @@ script.textContent = '(' + (function () {
             'height': '36px',
             'text-align': 'left',
             'text-shadow': '1px 1px 1px #000',
-            'background': 'url("https://westzzs.innogamescdn.com/images/interface/custom_unit_counter_sprite.png?2") no-repeat 50% 0',
+            'background': 'url("' + to_cdn('images/interface/custom_unit_counter_sprite.png?2') + '") no-repeat 50% 0',
             'cursor': 'pointer'
         }).append(evValue).click(openWindow);
         $("#ui_topbar").before(evCounter);
