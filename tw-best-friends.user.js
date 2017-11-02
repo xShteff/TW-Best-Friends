@@ -24,7 +24,7 @@
 // @grant           none
 // @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
 // @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.user.js
-// @version         1.10
+// @version         1.11
 // @run-at          document-end
 // ==/UserScript==
 
@@ -442,7 +442,7 @@ script.textContent = '(' + (function () {
 
     var generateDeleteFriendLink = function (pid) {
         return $('<img>').attr({
-            'src': 'https://westens.innogamescdn.com/images/icons/delete.png',
+            'src': to_cdn('images/icons/delete.png'),
             'title': '<span>Remove friend</span>',
             'id': 'xsht_remove_' + pid
         }).click(function () {
