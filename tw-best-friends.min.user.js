@@ -22,9 +22,9 @@
 // @match           https://*.the-west.it/game.php*
 // @exclude         https://classic.the-west.net/game.php*
 // @grant           none
-// @downloadURL     https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
-// @updateURL       https://xshteff.github.io/TW-Best-Friends/tw-best-friends.min.user.js
-// @version         1.11
+// @downloadURL     https://alstol.github.io/TW-Best-Friends/tw-best-friends.min.user.js
+// @updateURL       https://alstol.github.io/TW-Best-Friends/tw-best-friends.min.user.js
+// @version         1.12
 // @run-at          document-end
 // ==/UserScript==
 var script=document.createElement('script');script.type='text/javascript';script.textContent='('+(function(){var friends={};var lastSent={};var canNextSend=null;var logTypes={"friendDrop":"Friends","jobDrop":"Jobs","battleDrop":"Fort Battles","adminDrop":"Admin intervention","wofPay":"Used","duelDrop":"Duels","duelNPCDrop":"NPC Duels","adventureDrop":"Adventures","questDrop":"Quests","itemUse":"Used items","buildDrop":"Construction"};var newLogs=true;var logsMetadata=null;var playerLogs=null;var dropTypeLogs=null;var logsLocked=false;var sortingIsAscent=true;function getActiveSesKeys(){return Object.keys(Game.sesData);}
